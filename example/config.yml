@@ -1,0 +1,12 @@
+langservers:
+  html:
+    - npx
+    - 'html-languageserver'
+    - '--stdio'
+  css:
+    - npx
+    - 'css-languageserver'
+    - '--stdio'
+  javascript:
+    - node
+    - './node_modules/javascript-typescript-langserver/lib/language-server-stdio.js'

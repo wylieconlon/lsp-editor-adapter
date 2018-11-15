@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <title>CodeMirror Adapter for LSP</title>
+    <style>
+      .html, .css, .js {
+        height: 200px;
+        overflow: auto;
+        border-bottom: 1px solid #ccc;
+        max-width: 90vw;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="html"></div>
+    <div class="css"></div>
+    <div class="js"></div>
+
+    <div class="diagnostics"></div>
+
+    <div class="logging"></div>
+
+    <div class="completion"></div>
+
+    <div class="error"></div>
+
+    <script>
+      window.lspOptions = {
+        rootPath: '#rootPath#',
+        htmlPath: '#htmlPath#',
+        cssPath: '#cssPath#',
+        jsPath: '#jsPath#'
+      };
+    </script>
+
+    <script src="../dist/example.js"></script>
+  </body>
+</html>

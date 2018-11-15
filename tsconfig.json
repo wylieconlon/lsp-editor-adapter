@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist",
+    "noImplicitAny": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es6",
+    "lib": ["es6", "dom", "scripthost"],
+    "moduleResolution": "node",
+    "declaration": true
+  },
+  "include": [
+    "src",
+    "example",
+  ],
+  "exclude": [
+  ],
+}

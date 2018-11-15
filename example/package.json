@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "proxy": "jsonrpc-ws-proxy --languageServers config.yml",
+    "start": "concurrently \"npm run proxy\" \"node server.js\""
+  },
+  "license": "ISC",
+  "dependencies": {
+    "codemirror": "^5.41.0",
+    "express": "^4.16.4",
+    "javascript-typescript-langserver": "^2.11.1",
+    "jsonrpc-ws-proxy": "0.0.4",
+    "vscode-css-languageserver-bin": "^1.4.0",
+    "vscode-html-languageserver-bin": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.16.0",
+    "concurrently": "^4.0.1"
+  }
+}
