@@ -1,19 +1,12 @@
 import * as CodeMirror from 'codemirror';
-// import 'codemirror/addon/hint/show-hint';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/mode/css/css';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/idea.css';
 
-import * as lsProtocol from 'vscode-languageserver-protocol';
 import CodeMirrorAdapter from '../src/codemirror/adapter';
 import LSPConnection from '../src/ws-connection';
-
-// import { IPosition, TokenInfo} from '../src/index';
-// import registerCodeMirror from '../src/index';
-// import createConnection from '../src/index';
-// import * as index from '../src/index';
 
 let sampleJs = `
 let values = [15, 2, 7, 9, 17, 99, 50, 3];
@@ -97,9 +90,9 @@ let css = {
   documentText: () => cssEditor.getValue(),
 };
 
-let htmlConnection = new LSPConnection(html);
+let htmlConnection = new LSPConnection(html).connect(new WebSocket(html.serverUri));
 let htmlAdapter = new CodeMirrorAdapter(htmlConnection, {}, htmlEditor);
-let cssConnection = new LSPConnection(css);
+let cssConnection = new LSPConnection(css).connect(new WebSocket(css.serverUri));
 let cssAdapter = new CodeMirrorAdapter(cssConnection, {}, cssEditor);
-let jsConnection = new LSPConnection(js);
+let jsConnection = new LSPConnection(js).connect(new WebSocket(js.serverUri));
 let jsAdapter = new CodeMirrorAdapter(jsConnection, {}, jsEditor);

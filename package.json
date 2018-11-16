@@ -3,14 +3,22 @@
   "version": "0.0.1",
   "description": "Connects language servers with the codemirror editor",
   "main": "dist/main.js",
-  "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Wylie Conlon <wylieconlon@gmail.com",
   "license": "ISC",
+  "keywords": [
+    "lsp",
+    "languageserver",
+    "codemirror"
+  ],
+  "homepage": "https://github.com/wylieconlon/lsp-editor-adapter",
+  "repository": "github:wylieconlon/lsp-editor-adapter",
+  "peerDependencies": {
+    "codemirror": "^5.41.0"
+  },
   "dependencies": {
-    "codemirror": "^5.41.0",
     "events": "^3.0.0",
     "lodash-es": "^4.17.11",
     "vscode-jsonrpc": "^4.0.0",
@@ -20,9 +28,10 @@
   },
   "devDependencies": {
     "@sourcegraph/vscode-ws-jsonrpc": "0.0.3-fork",
+    "@types/codemirror": "0.0.65",
     "@types/lodash-es": "^4.17.1",
     "@types/node": "^10.12.3",
-    "@types/codemirror": "0.0.65",
+    "codemirror": "^5.41.0",
     "css-loader": "^1.0.1",
     "style-loader": "^0.23.1",
     "ts-loader": "^5.3.0",

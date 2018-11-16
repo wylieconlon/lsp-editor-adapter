@@ -30,11 +30,13 @@ class LspWsConnection extends EventEmitter implements LSPConnection {
   constructor(options: LSPOptions) {
     super();
     this.documentInfo = options;
-    this.connect(options.serverUri);
   }
 
-  private connect(uri: string) {
-    this.socket = new WebSocket(uri);
+  /**
+   * Initialize a connection over a web socket that speaks the LSP protocol
+   */
+  connect(socket: WebSocket) : this {
+    this.socket = socket;
 
     rpc.listen({
       webSocket: this.socket,
@@ -61,6 +63,8 @@ class LspWsConnection extends EventEmitter implements LSPConnection {
         });
       }
     });
+
+    return this;
   }
 
   sendInitialize() {
@@ -125,6 +129,8 @@ class LspWsConnection extends EventEmitter implements LSPConnection {
       });
       this.connection.sendNotification('textDocument/didOpen', textDocumentMessage);
       this.sendChange();
+    }, (e) => {
+      console.error(e);
     });
   }
 
