@@ -3,6 +3,7 @@ import * as rpc from '@sourcegraph/vscode-ws-jsonrpc';
 import { ServerCapabilities } from 'vscode-languageserver-protocol';
 import { IPosition, LSPOptions, LSPConnection, TokenInfo } from '.';
 import { EventEmitter } from 'events';
+import { ConsoleLogger } from '@sourcegraph/vscode-ws-jsonrpc';
 
 interface _FilesServerClientCapabilities {
   /* ... all fields from the base ClientCapabilities ... */
@@ -40,6 +41,7 @@ class LspWsConnection extends EventEmitter implements LSPConnection {
 
     rpc.listen({
       webSocket: this.socket,
+      logger: new ConsoleLogger(),
       onConnection: (connection: rpc.MessageConnection) => {
         connection.listen();
 

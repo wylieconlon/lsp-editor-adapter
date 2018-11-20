@@ -4,7 +4,8 @@
   "description": "Connects language servers with the codemirror editor",
   "main": "dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "build": "webpack"
   },
   "author": "Wylie Conlon <wylieconlon@gmail.com",
   "license": "ISC",
@@ -29,11 +30,14 @@
   "devDependencies": {
     "@sourcegraph/vscode-ws-jsonrpc": "0.0.3-fork",
     "@types/codemirror": "0.0.65",
+    "@types/jest": "^23.3.9",
     "@types/lodash-es": "^4.17.1",
     "@types/node": "^10.12.3",
     "codemirror": "^5.41.0",
     "css-loader": "^1.0.1",
+    "jest": "^23.6.0",
     "style-loader": "^0.23.1",
+    "ts-jest": "^23.10.4",
     "ts-loader": "^5.3.0",
     "typescript": "^3.1.6",
     "webpack": "^4.25.1",
