@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
+    "outDir": "lib",
     "noImplicitAny": true,
     "allowSyntheticDefaultImports": true,
     "target": "es6",

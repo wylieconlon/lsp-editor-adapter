@@ -35,7 +35,7 @@ import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/show-hint';
 
-import CodeMirrorAdapter from 'lsp-editor-adapter/codemirror/adapter';
+import CodeMirrorAdapter from 'lsp-editor-adapter/lib/codemirror/adapter';
 import { LspWsConnection } from 'lsp-editor-adapter';
 
 let editor = CodeMirror(document.querySelector('.editor'), {
