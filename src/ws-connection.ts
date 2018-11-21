@@ -120,7 +120,7 @@ class LspWsConnection extends EventEmitter implements LSPConnection {
       let textDocumentMessage : lsProtocol.DidOpenTextDocumentParams = {
         textDocument: <lsProtocol.TextDocumentItem> {
           uri: this.documentInfo.documentUri,
-          languageId: 'javascript',
+          languageId: this.documentInfo.languageId,
           text: this.documentInfo.documentText(),
           version: this.documentVersion,
         }

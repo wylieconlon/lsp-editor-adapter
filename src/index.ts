@@ -1,5 +1,6 @@
 import * as lsProtocol from 'vscode-languageserver-protocol';
 
+export * from './ws-connection';
 export { default as LspWsConnection } from './ws-connection';
 
 export interface IPosition {

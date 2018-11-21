@@ -1,11 +1,9 @@
+/// <reference types="@types/codemirror" />
 /// <reference types="@types/codemirror/codemirror-showhint" />
 
 import { debounce } from 'lodash-es';
 import * as lsProtocol from 'vscode-languageserver-protocol';
 import { MarkupContent } from 'vscode-languageserver-protocol';
-import * as CodeMirror from 'codemirror';
-import 'codemirror/addon/hint/show-hint.css';
-import 'codemirror/addon/hint/show-hint';
 import { TokenInfo, ITextEditorOptions, IPosition, LSPConnection, IEditorAdapter, getFilledDefaults } from '..';
 
 class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
@@ -52,7 +50,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   handleMouseOver() {
-    CodeMirror.on(this.editor.getWrapperElement(), 'mouseover', (ev : MouseEvent) => {
+    this.editor.getWrapperElement().addEventListener('mouseover', (ev : MouseEvent) => {
       let docPosition : IPosition = this.editor.coordsChar({
         left: ev.pageX,
         top: ev.pageY,

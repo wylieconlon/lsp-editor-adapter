@@ -8,8 +8,6 @@ jest.useRealTimers();
 
 let serverUri = 'ws://localhost:8080';
 
-// let mockSocket : MockSocket;
-
 interface Listeners {
   [type: string]: ((args: any) => void)[]
 }

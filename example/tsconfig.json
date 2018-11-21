@@ -1,6 +1,7 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": "..",
     "outDir": "dist",
     "noImplicitAny": true,
     "allowSyntheticDefaultImports": true,
@@ -9,10 +10,9 @@
     "moduleResolution": "node",
     "declaration": true
   },
-  "include": [
-    "src"
+  "files": [
+    "index.ts"
   ],
   "exclude": [
-    "node_modules"
   ],
 }

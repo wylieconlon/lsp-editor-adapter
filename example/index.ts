@@ -4,6 +4,10 @@ import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/mode/css/css';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/idea.css';
+// The plugin currently requires the show-hint extension from CodeMirror, which must be
+// installed by the app that uses the LSP connection
+import 'codemirror/addon/hint/show-hint.css';
+import 'codemirror/addon/hint/show-hint';
 
 import CodeMirrorAdapter from '../src/codemirror/adapter';
 import LSPConnection from '../src/ws-connection';

@@ -12,7 +12,7 @@ app.listen(4000, () => {
   console.log('Listening on port 4000');
 });
 
-app.use('/dist', express.static(path.join(__dirname, '../dist'), {
+app.use('/dist', express.static('dist', {
   extensions: 'js'
 }));
 
