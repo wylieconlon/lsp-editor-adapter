@@ -66,7 +66,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     });
   }
   
-  handleChange() {
+  handleChange(cm: CodeMirror.Editor, change: CodeMirror.EditorChange) {
     let location = this.editor.getDoc().getCursor('end')
     this.connection.sendChange();
 
@@ -103,7 +103,6 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     } else {
       this._resetState();
     }
-    console.log('typed', typedCharacter, this.token);
   }
 
   handleHover(response: lsProtocol.Hover) {
