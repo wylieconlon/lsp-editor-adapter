@@ -5,8 +5,8 @@ module.exports = function(config) {
     basePath: '',
 
     files: [
-      'src/**/*.ts',
-      'test/**/*.ts'
+      // The entry files are processed by webpack
+      'test/**/*.test.ts'
     ],
 
     browsers: ['ChromeHeadless'],
@@ -19,35 +19,50 @@ module.exports = function(config) {
 
     frameworks: [
       'mocha',
-      'karma-typescript'
     ],
 
     module: 'commonjs',
 
     reporters: [
       'mocha',
-      'karma-typescript'
     ],
 
     preprocessors: {
-      '**/*!(.d).ts': 'karma-typescript'
+      '**/*!(.d).ts': 'webpack',
+      '**/*!(.d).js': 'webpack'
     },
 
     plugins: [
       'karma-mocha',
       'karma-chrome-launcher',
-      'karma-typescript',
+      'karma-webpack',
       'karma-mocha-reporter'
     ],
 
-    karmaTypescriptConfig: {
-      tsconfig: "./tsconfig-test.json",
-      bundlerOptions: {
-        entrypoints: /\.test\.ts$/,
-        transforms: [
-          require("karma-typescript-es6-transform")()
+    webpack: {
+      mode: 'development',
+      module: {
+        rules: [
+          {
+            test: /\.tsx?$/,
+            use: 'ts-loader',
+            exclude: /node_modules/
+          }, {
+            test: /\.css$/,
+            use: [
+              { loader: 'style-loader' },
+              { loader: 'css-loader' }
+            ]
+          }
         ]
-      }
-    },
+      },
+      resolve: {
+        extensions: [ '.tsx', '.ts', '.js' ]
+      },
+      target: 'web',
+      node: {
+        net: 'mock',
+      },
+    }
   });
 };

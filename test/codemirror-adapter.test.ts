@@ -1,4 +1,4 @@
-import expect  from 'expect';
+import * as expect  from 'expect';
 import * as CodeMirror from 'codemirror';
 import CodeMirrorAdapter from '../src/codemirror/adapter'
 import { MockConnection } from './mock-connection';

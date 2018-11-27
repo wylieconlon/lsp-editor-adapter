@@ -1,4 +1,4 @@
-import expect from 'expect';
+import * as expect from 'expect';
 import * as sinon from 'sinon';
 import * as lsProtocol from 'vscode-languageserver-protocol';
 import { LspWsConnection } from '../src/';
