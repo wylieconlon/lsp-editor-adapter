@@ -1,5 +1,5 @@
 /// <reference types="@types/codemirror" />
-/// <reference types="@types/codemirror/codemirror-showhint" />
+/// <reference path="./codemirror-showhint.d.ts" />
 
 import { debounce } from 'lodash-es';
 import * as lsProtocol from 'vscode-languageserver-protocol';
