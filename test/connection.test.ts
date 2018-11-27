@@ -1,10 +1,7 @@
+import expect from 'expect';
+import * as sinon from 'sinon';
 import * as lsProtocol from 'vscode-languageserver-protocol';
 import { LspWsConnection } from '../src/';
-
-// The vscode-jsonrpc library has a timer-based loop that processes messages as soon as the timer
-// is able to run. The timers aren't part of the API of the library, so to keep the focus on testing
-// the connection logic, real timers are used for this test
-jest.useRealTimers();
 
 let serverUri = 'ws://localhost:8080';
 
@@ -65,19 +62,20 @@ class MockSocket implements EventTarget {
   /**
    * Mocks sending data to the server. The fake implementation needs to respond with some data
    */
-  send = jest.fn()
-  addEventListener = jest.fn().mockImplementation((type: keyof WebSocketEventMap, listener) => {
+  // send = jest.fn()
+  send = sinon.stub()
+  addEventListener = sinon.fake((type: keyof WebSocketEventMap, listener) => {
     let listeners = this.listeners[type];
     if (!listeners) this.listeners[type] = [];
     listeners.push(listener);
   })
-  removeEventListener = jest.fn().mockImplementation((type, listener) => {
+  removeEventListener = sinon.fake((type, listener) => {
     let index = this.listeners[type].indexOf((l) => l === listener);
     if (index > -1) {
       this.listeners[type].splice(index, 1);
     }
   })
-  close = jest.fn()
+  close = sinon.fake()
 
   /**
    * Sends a synthetic event to the client code, for example to imitate a server response
@@ -96,6 +94,7 @@ describe('LspWsConnection', function() {
   let mockSocket : MockSocket;
 
   beforeEach(() => {
+    console.log('connection');
     connection = new LspWsConnection({
       languageId: 'plaintext',
       rootUri: 'file://' + __dirname,
@@ -107,12 +106,12 @@ describe('LspWsConnection', function() {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    sinon.restore();
   });
 
   it('initializes the connection in the right order', (done) => {
     // 1. It sends initialize and expects a response with capabilities
-    mockSocket.send.mockImplementationOnce((str) => {
+    mockSocket.send.onCall(0).callsFake((str) => {
       let message = JSON.parse(str);
       expect(message.method).toEqual('initialize');
 
@@ -145,29 +144,29 @@ describe('LspWsConnection', function() {
     });
 
     // 2. After receiving capabilities from the server, it sends more configuration options
-    mockSocket.send.mockImplementationOnce((str) => {
+    mockSocket.send.onCall(1).callsFake((str) => {
       let message = JSON.parse(str);
       expect(message.method).toEqual('initialized');
 
-      setImmediate(() => {
-        let calls = mockSocket.send.mock.calls;
-        expect(calls.length).toEqual(5);
+      setTimeout(() => {
+        let mock = mockSocket.send;
+        expect(mock.callCount).toEqual(5);
 
         // 3, 4, 5 are sent after initialization
-        expect(JSON.parse(calls[2][0]).method).toEqual('workspace/didChangeConfiguration');
-        expect(JSON.parse(calls[3][0]).method).toEqual('textDocument/didOpen');
-        expect(JSON.parse(calls[4][0]).method).toEqual('textDocument/didChange');
+        expect(JSON.parse(mock.getCall(2).args[0]).method).toEqual('workspace/didChangeConfiguration');
+        expect(JSON.parse(mock.getCall(3).args[0]).method).toEqual('textDocument/didOpen');
+        expect(JSON.parse(mock.getCall(4).args[0]).method).toEqual('textDocument/didChange');
 
         done();
-      });
+      }, 0);
     });
 
     connection.connect(mockSocket);
     mockSocket.dispatchEvent(new Event('open'));
 
     // Send the messages
-    expect(mockSocket.send.mock.calls.length).toEqual(1);;
-    expect(JSON.parse(mockSocket.send.mock.calls[0][0]).method).toEqual('initialize');
+    expect(mockSocket.send.callCount).toEqual(1);;
+    expect(JSON.parse(mockSocket.send.firstCall[0]).method).toEqual('initialize');
   });
 
   it('handles hover events', (done) => {
@@ -187,7 +186,7 @@ describe('LspWsConnection', function() {
 
     // Fake response just includes the hover provider
     mockSocket.send
-      .mockImplementationOnce((str) => {
+      .onFirstCall().callsFake((str) => {
         let data = JSON.stringify({
           jsonrpc: "2.0",
           id: 0,
@@ -201,14 +200,14 @@ describe('LspWsConnection', function() {
         mockSocket.dispatchEvent(new MessageEvent('message', { data }));
       })
       // 2. After receiving capabilities from the server, we will send a hover
-      .mockImplementationOnce((str) => {
+      .onSecondCall().callsFake((str) => {
         connection.getHoverTooltip({
           line: 1,
           ch: 0
         });
       })
       // 3. Fake a server response for the hover
-      .mockImplementationOnce((str) => {
+      .onThirdCall().callsFake((str) => {
         let message= JSON.parse(str);
 
         let data = JSON.stringify({
