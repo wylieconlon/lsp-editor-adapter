@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "",
+    "noEmitOnError": true,
+    "module": "commonjs",
+    "sourceMap": true
+  },
+  "exclude": ["node_modules/!(lodash-es)"],
+  "include": [
+    "test",
+    "src"
+  ]
+}

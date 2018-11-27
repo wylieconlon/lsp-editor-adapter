@@ -9,7 +9,7 @@ module.exports = function(config) {
       'test/**/*.ts'
     ],
 
-    browsers: ['Chrome'],
+    browsers: ['ChromeHeadless'],
     mime: {
       'text/x-typescript': ['ts','tsx']
     },
@@ -41,27 +41,13 @@ module.exports = function(config) {
     ],
 
     karmaTypescriptConfig: {
+      tsconfig: "./tsconfig-test.json",
       bundlerOptions: {
         entrypoints: /\.test\.ts$/,
         transforms: [
           require("karma-typescript-es6-transform")()
         ]
-      },
-      compilerOptions: {
-        // Prevent tests from running if there are compile error
-        noEmitOnError: true,
-        module: "commonjs",
-        moduleResolution: "node",
-        sourceMap: true,
-        allowSyntheticDefaultImports: true,
-        lib: ["ES6", "DOM", "ScriptHost"],
-        target: "ES5"
-      },
-      exclude: ["node_modules/!(lodash-es)"],
-      include: [
-        "test",
-        "src"
-      ]
+      }
     },
   });
 };

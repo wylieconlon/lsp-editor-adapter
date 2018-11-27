@@ -12,47 +12,47 @@ describe('CodeMirror adapter', () => {
     document.body.appendChild(editorEl);
     editor = CodeMirror(editorEl);
   });
+
   afterEach(() => {
+    document.body.removeChild(editorEl);
     editorEl.remove();
   });
 
-  it('sends a textDocument/didChange event for every character', () => {
+  it('sends a textDocument/didChange event for every character', (done) => {
     let connection = new MockConnection();
-    let adapter = new CodeMirrorAdapter(connection, {}, editor);
+    let adapter = new CodeMirrorAdapter(connection, {
+      debounceSuggestionsWhileTyping: 10
+    }, editor);
     
     editor.setValue('a');
-    expect(connection.sendChange.callCount).toEqual(1);
 
-    editor.setValue('ab');
-    expect(connection.sendChange.callCount).toEqual(2);
+    // TODO: Use sinon fake timer
+    setTimeout(() => {
+      expect(connection.sendChange.callCount).toEqual(1);
+
+      done();
+    }, 50);
   });
 
   describe('autocompletion', () => {
     let connection : MockConnection;
 
-    // Waits to run each test until the autocompletion capability is returned 
-    beforeEach((done) => {
+    beforeEach(() => {
       connection = new MockConnection();
-      connection.sendInitialize.onFirstCall().callsFake(() => {
-        return new Promise((resolve) => {
-          done();
-          resolve(JSON.stringify({
-            capabilities: {
-              completionProvider: {
-                resolveProvider: false,
-                triggerCharacters: ['.']
-              }
-            }
-          }));
-        });
-      });
 
-      new CodeMirrorAdapter(connection, {}, editor);
+      new CodeMirrorAdapter(connection, {
+        quickSuggestionsDelay: 10
+      }, editor);
     });
 
-    it('requests autocompletion suggestions', () => {
-      editor.setValue('a');
-      expect(connection.getCompletion.callCount).toEqual(1);
+    it('requests autocompletion suggestions', (done) => {
+      editor.getDoc().replaceSelection('a');
+
+      // TODO: Use sinon fake timer
+      setTimeout(() => {
+        expect(connection.getCompletion.callCount).toEqual(1);
+        done();
+      }, 50);
     });
   });
 });
