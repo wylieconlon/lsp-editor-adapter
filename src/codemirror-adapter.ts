@@ -43,9 +43,10 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     }, this.options.quickSuggestionsDelay));
   }
 
-  _resetState() {
+  _removeSignatureWidget() {
     if (this.signatureWidget) {
       this.signatureWidget.clear();
+      this.signatureWidget = null;
     }
   }
 
@@ -80,7 +81,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
     if (typeof typedCharacter === 'undefined') {
       // Line was cleared
-      this._resetState();
+      this._removeSignatureWidget();
     } else if (completionCharacters.indexOf(typedCharacter) > -1) {
       this.token = this._getTokenEndingAtPosition(code, location, completionCharacters);
       this.connection.getCompletion(
@@ -101,7 +102,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
       );
       this.token = this._getTokenEndingAtPosition(code, location, completionCharacters.concat(signatureCharacters));
     } else {
-      this._resetState();
+      this._removeSignatureWidget();
     }
   }
 
@@ -222,15 +223,13 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   handleSignature(result: lsProtocol.SignatureHelp) {
-    if (this.signatureWidget && (!this.token || !result.signatures.length)) {
-      this.signatureWidget.clear();
-      this.signatureWidget = null;
-    }
+    this._removeSignatureWidget();
     if (!result.signatures.length || !this.token) {
       return;
     }
 
     let htmlElement = document.createElement('div');
+    htmlElement.classList.add('lsp-signature');
     htmlElement.setAttribute('style', 'font-size: 12px; border: 1px solid black;');
     result.signatures.forEach((item : lsProtocol.SignatureInformation) => {
       let el = document.createElement('div');
@@ -277,7 +276,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   private _getFilteredCompletions(triggerWord : string, items: lsProtocol.CompletionItem[]) : lsProtocol.CompletionItem[] {
-    if (!triggerWord) {
+    if (/\W+/.test(triggerWord)) {
       return items;
     }
     let word = triggerWord.toLowerCase();

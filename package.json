@@ -10,6 +10,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "test": "karma start",
+    "test-dev": "karma start --browsers Chrome --singleRun false --timeout 30000 --autoWatch",
     "prepare": "rimraf lib && webpack"
   },
   "author": "Wylie Conlon <wylieconlon@gmail.com",
