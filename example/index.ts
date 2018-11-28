@@ -9,8 +9,10 @@ import 'codemirror/theme/idea.css';
 import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/show-hint';
 
-import CodeMirrorAdapter from '../src/codemirror/adapter';
-import LSPConnection from '../src/ws-connection';
+// import CodeMirrorAdapter from '../src/codemirror-adapter';
+// import LSPConnection from '../src/ws-connection';
+import * as CodeMirrorAdapter from '../lib/codemirror-adapter';
+import * as LSPConnection from '../lib/index';
 
 let sampleJs = `
 let values = [15, 2, 7, 9, 17, 99, 50, 3];

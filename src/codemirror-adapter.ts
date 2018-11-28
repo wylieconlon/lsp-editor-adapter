@@ -4,7 +4,9 @@
 import { debounce } from 'lodash-es';
 import * as lsProtocol from 'vscode-languageserver-protocol';
 import { MarkupContent } from 'vscode-languageserver-protocol';
-import { TokenInfo, ITextEditorOptions, IPosition, LSPConnection, IEditorAdapter, getFilledDefaults } from '..';
+import { TokenInfo, ITextEditorOptions, IPosition, LSPConnection, IEditorAdapter, getFilledDefaults } from '.';
+
+export { TokenInfo, ITextEditorOptions, IPosition, LSPConnection, IEditorAdapter } from '.';
 
 class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   options: ITextEditorOptions;
