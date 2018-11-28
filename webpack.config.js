@@ -4,7 +4,6 @@ module.exports = {
   mode: "production",
   entry: {
     index: './src/index.ts',
-    'codemirror-adapter': './src/codemirror-adapter.ts'
   },
   module: {
     rules: [
@@ -31,8 +30,15 @@ module.exports = {
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, 'lib'),
-    library: 'lspEditorAdapter',
-    libraryTarget: 'umd',
-    umdNamedDefine: true
+    library: 'lsp-editor-adapter',
+    libraryTarget: 'umd'
+  },
+  externals: {
+    codemirror: {
+      commonjs: 'codemirror',
+      commonjs2: 'codemirror',
+      amd: 'codemirror',
+      root: 'CodeMirror'
+    }
   }
 };

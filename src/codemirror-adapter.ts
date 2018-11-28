@@ -1,12 +1,10 @@
 /// <reference types="@types/codemirror" />
 /// <reference types="@types/codemirror/codemirror-showhint" />
 
-import { debounce } from 'lodash-es';
+import debounce from 'lodash-es/debounce';
 import * as lsProtocol from 'vscode-languageserver-protocol';
 import { MarkupContent } from 'vscode-languageserver-protocol';
-import { TokenInfo, ITextEditorOptions, IPosition, LSPConnection, IEditorAdapter, getFilledDefaults } from '.';
-
-export { TokenInfo, ITextEditorOptions, IPosition, LSPConnection, IEditorAdapter } from '.';
+import { TokenInfo, ITextEditorOptions, IPosition, LSPConnection, IEditorAdapter, getFilledDefaults } from './types';
 
 class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   options: ITextEditorOptions;
