@@ -1,8 +1,8 @@
 import * as lsProtocol from 'vscode-languageserver-protocol';
 import * as rpc from '@sourcegraph/vscode-ws-jsonrpc';
 import { ServerCapabilities } from 'vscode-languageserver-protocol';
-import { IPosition, LSPOptions, LSPConnection, TokenInfo } from '.';
-import { EventEmitter } from 'events';
+import { IPosition, LSPOptions, LSPConnection, TokenInfo } from './types';
+import * as events  from 'events';
 import { ConsoleLogger } from '@sourcegraph/vscode-ws-jsonrpc';
 
 interface _FilesServerClientCapabilities {
@@ -19,7 +19,7 @@ interface _FilesServerClientCapabilities {
 }
 type ExtendedClientCapabilities = lsProtocol.ClientCapabilities & _FilesServerClientCapabilities;
 
-class LspWsConnection extends EventEmitter implements LSPConnection {
+class LspWsConnection extends events.EventEmitter implements LSPConnection {
   private socket: WebSocket;
   private documentInfo : LSPOptions;
   private serverCapabilities: lsProtocol.ServerCapabilities;

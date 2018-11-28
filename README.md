@@ -35,8 +35,7 @@ import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/show-hint';
 
-import CodeMirrorAdapter from 'lsp-editor-adapter/lib/codemirror/adapter';
-import { LspWsConnection } from 'lsp-editor-adapter';
+import { LspWsConnection, CodeMirrorAdapter } from 'lsp-editor-adapter';
 
 let editor = CodeMirror(document.querySelector('.editor'), {
   value: 'hello world',
@@ -54,7 +53,7 @@ let connectionOptions = {
 };
 
 // The WebSocket is passed in to allow testability
-let lspConnection = new LSPConnection(editor)
+let lspConnection = new LspWsConnection(editor)
   .connect(new WebSocket('ws://localhost:8080'));
 
 // The adapter is what allows the editor to provide UI elements

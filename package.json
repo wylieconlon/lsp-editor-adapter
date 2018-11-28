@@ -10,7 +10,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "test": "karma start",
-    "prepare": "rimraf lib && tsc"
+    "prepare": "rimraf lib && webpack"
   },
   "author": "Wylie Conlon <wylieconlon@gmail.com",
   "license": "ISC",
@@ -25,7 +25,6 @@
     "codemirror": "^5.41.0"
   },
   "dependencies": {
-    "events": "^3.0.0",
     "lodash-es": "^4.17.11",
     "vscode-jsonrpc": "^4.0.0",
     "vscode-languageclient": "^5.1.1",

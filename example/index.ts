@@ -9,8 +9,7 @@ import 'codemirror/theme/idea.css';
 import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/show-hint';
 
-import CodeMirrorAdapter from '../src/codemirror/adapter';
-import LSPConnection from '../src/ws-connection';
+import { LspWsConnection, CodeMirrorAdapter } from '../lib/index';
 
 let sampleJs = `
 let values = [15, 2, 7, 9, 17, 99, 50, 3];
@@ -94,9 +93,9 @@ let css = {
   documentText: () => cssEditor.getValue(),
 };
 
-let htmlConnection = new LSPConnection(html).connect(new WebSocket(html.serverUri));
+let htmlConnection = new LspWsConnection(html).connect(new WebSocket(html.serverUri));
 let htmlAdapter = new CodeMirrorAdapter(htmlConnection, {}, htmlEditor);
-let cssConnection = new LSPConnection(css).connect(new WebSocket(css.serverUri));
+let cssConnection = new LspWsConnection(css).connect(new WebSocket(css.serverUri));
 let cssAdapter = new CodeMirrorAdapter(cssConnection, {}, cssEditor);
-let jsConnection = new LSPConnection(js).connect(new WebSocket(js.serverUri));
+let jsConnection = new LspWsConnection(js).connect(new WebSocket(js.serverUri));
 let jsAdapter = new CodeMirrorAdapter(jsConnection, {}, jsEditor);
