@@ -56,7 +56,7 @@ let cssEditor = CodeMirror(document.querySelector('.css'), {
   lineNumbers: true,
   mode: 'css',
   value: sampleCss,
-  // gutters: ['CodeMirror-lsp'],
+  gutters: ['CodeMirror-lsp'],
 });
 
 let jsEditor = CodeMirror(document.querySelector('.js'), {

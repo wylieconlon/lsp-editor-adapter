@@ -108,6 +108,34 @@ describe('CodeMirror adapter', () => {
       expect(document.querySelectorAll('.CodeMirror-hint').length).toEqual(1);
       expect(document.querySelector('.CodeMirror-hint').textContent).toEqual('bobulate');
     });
+
+    it('accepts completions on enter', () => {
+      editor.getDoc().replaceSelection('a.');
+      clock.tick(50);
+
+      connection.dispatchEvent(new MessageEvent('completion', {
+        data: [{
+          label: 'length',
+        }, {
+          label: 'map',
+        }],
+      }));
+
+      expect(document.querySelectorAll('.CodeMirror-hint').length).toEqual(2);
+      expect(document.querySelectorAll('.CodeMirror-hint')[0].textContent).toEqual('length');
+
+      let el = editorEl.querySelector('textarea');
+      el.focus();
+      el.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Enter',
+        // @ts-ignore: Deprecated property used by CodeMirror
+        keyCode: 13
+      }));
+
+      expect(document.querySelectorAll('.CodeMirror-hint').length).toEqual(0);
+      expect(editor.getValue()).toEqual('a.length');
+    });
+
   });
 
   describe('signature help', () => {
@@ -206,7 +234,6 @@ describe('CodeMirror adapter', () => {
         }
       }));
 
-      debugger;
       expect(editor.getDoc().getAllMarks().length).toEqual(1);
     });
   });

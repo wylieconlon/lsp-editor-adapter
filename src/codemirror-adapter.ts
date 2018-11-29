@@ -142,7 +142,6 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
     this.hoverMarker = this.editor.getDoc().markText(start, end, {
       title: tooltipText,
-      // css: 'background-color: #ccf',
       css: 'text-decoration: underline',
     });
   }
@@ -181,11 +180,17 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
     let bestCompletions = this._getFilteredCompletions(this.token.text, completions);
 
+    let start = this.token.start;
+    if (/^\W$/.test(this.token.text)) {
+      // Special case for completion on the completion trigger itself, the completion goes after
+      start = this.token.end;
+    }
+
     this.editor.showHint(<CodeMirror.ShowHintOptions> {
       completeSingle: false,
       hint: () => {
         return {
-          from: this.token.start,
+          from: start,
           to: this.token.end,
           list: bestCompletions.map((completion) => completion.label),
         };
