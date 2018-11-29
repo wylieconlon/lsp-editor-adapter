@@ -53,9 +53,9 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   handleMouseOver() {
     this.editor.getWrapperElement().addEventListener('mouseover', (ev : MouseEvent) => {
       let docPosition : IPosition = this.editor.coordsChar({
-        left: ev.pageX,
-        top: ev.pageY,
-      });
+        left: ev.screenX,
+        top: ev.screenY,
+      }, 'window');
 
       if (
         !this.hoverCharacter ||

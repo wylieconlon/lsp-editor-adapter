@@ -40,6 +40,41 @@ describe('CodeMirror adapter', () => {
     expect(connection.sendChange.callCount).toEqual(1);
   });
 
+  describe('hover requests', () => {
+    let connection : MockConnection;
+
+    beforeEach(() => {
+      connection = new MockConnection();
+
+      new CodeMirrorAdapter(connection, {
+        quickSuggestionsDelay: 10
+      }, editor);
+
+      editor.getDoc().replaceSelection('hello world');
+    });
+
+    it('should request hover info when the mouse moves', () => {
+      let pos = {
+        line: 0,
+        ch: 3
+      };
+      let screenPos = editor.charCoords(pos, 'window');
+
+      editor.getWrapperElement().dispatchEvent(new MouseEvent('mouseover', {
+        screenX: screenPos.left,
+        screenY: screenPos.top,
+      }));
+
+      clock.tick(10);
+
+      expect(connection.getHoverTooltip.callCount).toEqual(1);
+      expect(connection.getHoverTooltip.firstCall.calledWithMatch({
+        line: 0,
+        ch: 3
+      })).toEqual(true);
+    });
+  });
+
   describe('autocompletion', () => {
     let connection : MockConnection;
 
