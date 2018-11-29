@@ -11,7 +11,7 @@
   "scripts": {
     "test": "karma start",
     "test-dev": "karma start --browsers Chrome --singleRun false --timeout 30000 --autoWatch",
-    "prepare": "rimraf lib && webpack"
+    "prepare": "rimraf lib && webpack && cp src/*.css lib"
   },
   "author": "Wylie Conlon <wylieconlon@gmail.com",
   "license": "ISC",

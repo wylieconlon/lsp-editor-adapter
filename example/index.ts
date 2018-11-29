@@ -9,6 +9,8 @@ import 'codemirror/theme/idea.css';
 import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/show-hint';
 
+import '../src/codemirror-lsp.css';
+
 import { LspWsConnection, CodeMirrorAdapter } from '../lib/index';
 
 let sampleJs = `
@@ -46,6 +48,7 @@ let htmlEditor = CodeMirror(document.querySelector('.html'), {
   lineNumbers: true,
   mode: 'htmlmixed',
   value: sampleHtml,
+  gutters: ['CodeMirror-lsp'],
 });
 
 let cssEditor = CodeMirror(document.querySelector('.css'), {
@@ -53,6 +56,7 @@ let cssEditor = CodeMirror(document.querySelector('.css'), {
   lineNumbers: true,
   mode: 'css',
   value: sampleCss,
+  // gutters: ['CodeMirror-lsp'],
 });
 
 let jsEditor = CodeMirror(document.querySelector('.js'), {
@@ -60,6 +64,7 @@ let jsEditor = CodeMirror(document.querySelector('.js'), {
   lineNumbers: true,
   mode: 'javascript',
   value: sampleJs,
+  gutters: ['CodeMirror-lsp'],
 });
 
 interface lspServerOptions {

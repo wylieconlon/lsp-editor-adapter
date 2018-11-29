@@ -35,10 +35,14 @@ import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/show-hint';
 
+import 'lsp-editor-adapter/lib/codemirror-lsp.css';
 import { LspWsConnection, CodeMirrorAdapter } from 'lsp-editor-adapter';
 
 let editor = CodeMirror(document.querySelector('.editor'), {
   value: 'hello world',
+
+  // Optional: You can add a gutter for syntax error markers
+  gutters: ['CodeMirror-lsp']
 });
 
 // Take a look at how the example is configured for ideas

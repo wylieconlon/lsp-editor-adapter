@@ -27,13 +27,7 @@ export class MockConnection implements LSPConnection {
     if (!listeners) {
       return false;
     }
-    if (event.type === 'signature') {
-      listeners.forEach((listener) => listener.call(null, <lsProtocol.SignatureHelp>event.data));
-    } else if (event.type === 'completion') {
-      listeners.forEach((listener) => listener.call(null, <lsProtocol.CompletionItem[]>event.data));
-    } else {
-      listeners.forEach((listener) => listener.call(null, event));
-    }
+    listeners.forEach((listener) => listener.call(null, event.data));
   })
 
   sendInitialize = sinon.stub()

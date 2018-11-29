@@ -100,7 +100,6 @@ describe('LspWsConnection', function() {
   it('initializes the connection in the right order', (done) => {
     // 1. It sends initialize and expects a response with capabilities
     mockSocket.send.onFirstCall().callsFake((str) => {
-      console.log('socket is initializing');
       let message = JSON.parse(str);
       expect(message.method).toEqual('initialize');
 
@@ -145,7 +144,6 @@ describe('LspWsConnection', function() {
 
     // 2. After receiving capabilities from the server, it sends more configuration options
     mockSocket.send.onSecondCall().callsFake((str) => {
-      console.log('socket has been initialized');
       let message = JSON.parse(str);
       expect(message.method).toEqual('initialized');
 

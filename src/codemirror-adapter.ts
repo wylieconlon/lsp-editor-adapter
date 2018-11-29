@@ -194,9 +194,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   handleDiagnostic(response: lsProtocol.PublishDiagnosticsParams) {
-    // TODO: Mark this in the gutter
-    let el = document.querySelector('.diagnostics');
-    el.innerHTML = '';
+    this.editor.clearGutter('CodeMirror-lsp');
     this.markedDiagnostics.forEach((marker) => {
       marker.clear();
     });
@@ -216,9 +214,10 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
         className: 'cm-error',
       }));
 
-      let childEl = document.createElement('p');
-      childEl.innerText = `Line ${start.line}: ${diagnostic.message}`;
-      el.appendChild(childEl);
+      let childEl = document.createElement('div');
+      childEl.classList.add('CodeMirror-lsp-guttermarker');
+      childEl.title = `Line ${start.line}: ${diagnostic.message}`;
+      this.editor.setGutterMarker(start.line, 'CodeMirror-lsp', childEl);
     });
   }
 
@@ -229,8 +228,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     }
 
     let htmlElement = document.createElement('div');
-    htmlElement.classList.add('lsp-signature');
-    htmlElement.setAttribute('style', 'font-size: 12px; border: 1px solid black;');
+    htmlElement.classList.add('CodeMirror-lsp-signature');
     result.signatures.forEach((item : lsProtocol.SignatureInformation) => {
       let el = document.createElement('div');
       el.innerText = item.label;

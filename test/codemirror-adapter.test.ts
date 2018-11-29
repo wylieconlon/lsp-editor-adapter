@@ -4,6 +4,7 @@ import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/hint/show-hint';
 import CodeMirrorAdapter from '../src/codemirror-adapter'
 import { MockConnection } from './mock-connection';
+import 'codemirror/lib/codemirror.css';
 
 describe('CodeMirror adapter', () => {
   let editorEl : HTMLDivElement;
@@ -145,7 +146,7 @@ describe('CodeMirror adapter', () => {
       }));
 
       clock.tick(50);
-      expect(document.querySelectorAll('.lsp-signature').length).toEqual(1);
+      expect(document.querySelectorAll('.CodeMirror-lsp-signature').length).toEqual(1);
     });
 
     it('clears signature suggestions after typing more', () => {
@@ -163,7 +164,50 @@ describe('CodeMirror adapter', () => {
 
       editor.getDoc().setValue('console.log("hello");');
       clock.tick(50);
-      expect(document.querySelectorAll('.lsp-signature').length).toEqual(0);
+      expect(document.querySelectorAll('.CodeMirror-lsp-signature').length).toEqual(0);
+    });
+  });
+
+  describe('syntax errors', () => {
+    let connection : MockConnection;
+
+    beforeEach(() => {
+      connection = new MockConnection();
+
+      new CodeMirrorAdapter(connection, {}, editor);
+
+      editor.getDoc().replaceSelection('.myClass {}');
+    });
+
+    afterEach(() => {
+      sinon.restore();
+   });
+
+    it('displays diagnostics', () => {
+      connection.dispatchEvent(new MessageEvent('diagnostic', {
+        data: {
+          uri: 'file:///path/to/file.css',
+          diagnostics: [{
+            code: 'emptyRules',
+            source: 'css.lint.emptyRules',
+            message: 'Do not use empty rulesets',
+            severity: 2,
+            range: {
+              start: {
+                line: 0,
+                character: 0
+              },
+              end: {
+                line: 0,
+                character: 7
+              }
+            }
+          }]
+        }
+      }));
+
+      debugger;
+      expect(editor.getDoc().getAllMarks().length).toEqual(1);
     });
   });
 });
