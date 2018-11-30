@@ -11,8 +11,8 @@
   "scripts": {
     "test": "karma start",
     "test-dev": "karma start --browsers Chrome --singleRun false --timeout 30000 --autoWatch",
-    "lint": "tslint --project tsconfig.json --format stylish",
-    "lint-fix": "tslint --project tsconfig.json --format stylish --fix",
+    "lint": "tslint --project tsconfig-test.json --format stylish",
+    "lint-fix": "tslint --project tsconfig-test.json --format stylish --fix",
     "prepare": "rimraf lib && webpack && cp src/*.css lib"
   },
   "author": "Wylie Conlon <wylieconlon@gmail.com",

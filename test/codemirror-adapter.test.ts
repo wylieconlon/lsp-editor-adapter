@@ -1,15 +1,15 @@
-import * as expect  from 'expect';
-import * as sinon from 'sinon';
 import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/hint/show-hint';
-import CodeMirrorAdapter from '../src/codemirror-adapter'
-import { MockConnection } from './mock-connection';
 import 'codemirror/lib/codemirror.css';
+import * as expect from 'expect';
+import * as sinon from 'sinon';
+import CodeMirrorAdapter from '../src/codemirror-adapter';
+import { MockConnection } from './mock-connection';
 
 describe('CodeMirror adapter', () => {
-  let editorEl : HTMLDivElement;
-  let editor : CodeMirror.Editor;
-  let clock : sinon.SinonFakeTimers;
+  let editorEl: HTMLDivElement;
+  let editor: CodeMirror.Editor;
+  let clock: sinon.SinonFakeTimers;
 
   beforeEach(() => {
     clock = sinon.useFakeTimers();
@@ -21,18 +21,18 @@ describe('CodeMirror adapter', () => {
 
   afterEach(() => {
     // CodeMirror-hints doesn't remove itself
-    document.querySelectorAll('.CodeMirror-hints').forEach(e => e.remove());
+    document.querySelectorAll('.CodeMirror-hints').forEach((e) => e.remove());
     document.body.removeChild(editorEl);
     editorEl.remove();
     clock.restore();
   });
 
   it('sends a textDocument/didChange event for every character', () => {
-    let connection = new MockConnection();
-    let adapter = new CodeMirrorAdapter(connection, {
-      debounceSuggestionsWhileTyping: 10
+    const connection = new MockConnection();
+    const adapter = new CodeMirrorAdapter(connection, {
+      debounceSuggestionsWhileTyping: 10,
     }, editor);
-    
+
     editor.setValue('a');
 
     clock.tick(50);
@@ -41,24 +41,25 @@ describe('CodeMirror adapter', () => {
   });
 
   describe('hover requests', () => {
-    let connection : MockConnection;
+    let connection: MockConnection;
 
     beforeEach(() => {
       connection = new MockConnection();
 
+      // tslint:disable no-unused-expression
       new CodeMirrorAdapter(connection, {
-        quickSuggestionsDelay: 10
+        quickSuggestionsDelay: 10,
       }, editor);
 
       editor.getDoc().replaceSelection('hello world');
     });
 
     it('should request hover info when the mouse moves', () => {
-      let pos = {
+      const pos = {
         line: 0,
-        ch: 3
+        ch: 3,
       };
-      let screenPos = editor.charCoords(pos, 'window');
+      const screenPos = editor.charCoords(pos, 'window');
 
       editor.getWrapperElement().dispatchEvent(new MouseEvent('mouseover', {
         screenX: screenPos.left,
@@ -70,19 +71,19 @@ describe('CodeMirror adapter', () => {
       expect(connection.getHoverTooltip.callCount).toEqual(1);
       expect(connection.getHoverTooltip.firstCall.calledWithMatch({
         line: 0,
-        ch: 3
+        ch: 3,
       })).toEqual(true);
     });
   });
 
   describe('autocompletion', () => {
-    let connection : MockConnection;
+    let connection: MockConnection;
 
     beforeEach(() => {
       connection = new MockConnection();
 
       new CodeMirrorAdapter(connection, {
-        quickSuggestionsDelay: 10
+        quickSuggestionsDelay: 10,
       }, editor);
     });
 
@@ -159,12 +160,12 @@ describe('CodeMirror adapter', () => {
       expect(document.querySelectorAll('.CodeMirror-hint').length).toEqual(2);
       expect(document.querySelectorAll('.CodeMirror-hint')[0].textContent).toEqual('length');
 
-      let el = editorEl.querySelector('textarea');
+      const el = editorEl.querySelector('textarea');
       el.focus();
       el.dispatchEvent(new KeyboardEvent('keydown', {
         key: 'Enter',
         // @ts-ignore: Deprecated property used by CodeMirror
-        keyCode: 13
+        keyCode: 13,
       }));
 
       expect(document.querySelectorAll('.CodeMirror-hint').length).toEqual(0);
@@ -174,13 +175,13 @@ describe('CodeMirror adapter', () => {
   });
 
   describe('signature help', () => {
-    let connection : MockConnection;
+    let connection: MockConnection;
 
     beforeEach(() => {
       connection = new MockConnection();
 
       new CodeMirrorAdapter(connection, {
-        quickSuggestionsDelay: 10
+        quickSuggestionsDelay: 10,
       }, editor);
 
       editor.getDoc().replaceSelection('console.log(');
@@ -203,9 +204,9 @@ describe('CodeMirror adapter', () => {
             label: 'log(message: any)',
             parameters: [{
               label: 'message: any',
-            }]
+            }],
           }],
-        }
+        },
       }));
 
       clock.tick(50);
@@ -220,9 +221,9 @@ describe('CodeMirror adapter', () => {
             label: 'log(message: any)',
             parameters: [{
               label: 'message: any',
-            }]
+            }],
           }],
-        }
+        },
       }));
 
       editor.getDoc().setValue('console.log("hello");');
@@ -232,7 +233,7 @@ describe('CodeMirror adapter', () => {
   });
 
   describe('syntax errors', () => {
-    let connection : MockConnection;
+    let connection: MockConnection;
 
     beforeEach(() => {
       connection = new MockConnection();
@@ -258,15 +259,15 @@ describe('CodeMirror adapter', () => {
             range: {
               start: {
                 line: 0,
-                character: 0
+                character: 0,
               },
               end: {
                 line: 0,
-                character: 7
-              }
-            }
-          }]
-        }
+                character: 7,
+              },
+            },
+          }],
+        },
       }));
 
       expect(editor.getDoc().getAllMarks().length).toEqual(1);
