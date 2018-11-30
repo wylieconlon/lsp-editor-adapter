@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import { LSPConnection } from '../src'
+import { ILspConnection } from '../src'
 
 interface Listeners {
   [key: string]: ((arg: any) => void)[]
@@ -7,7 +7,7 @@ interface Listeners {
 
 // There is a library that can be used to mock WebSockets, but the API surface tested here is small
 // enough that it is not necessary to use the library. This mock is a simple EventEmitter
-export class MockConnection implements LSPConnection {
+export class MockConnection implements ILspConnection {
   listeners : Listeners = {}
 
   constructor() {}

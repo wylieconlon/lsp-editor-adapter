@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tslint.json",
+  "extends": "tslint:recommended",
+  "rules": {
+    "quotemark": {
+      "options": ["single"]
+    },
+    "object-literal-sort-keys": false,
+    "no-empty": false,
+    "no-console": true
+  },
+  "linterOptions": {
+    "exclude": ["*/node_modules/**/*"]
+  }
+}

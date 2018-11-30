@@ -1,11 +1,11 @@
-import * as lsProtocol from 'vscode-languageserver-protocol';
 import * as rpc from '@sourcegraph/vscode-ws-jsonrpc';
-import { ServerCapabilities } from 'vscode-languageserver-protocol';
-import { IPosition, LSPOptions, LSPConnection, TokenInfo } from './types';
-import * as events  from 'events';
 import { ConsoleLogger } from '@sourcegraph/vscode-ws-jsonrpc';
+import * as events from 'events';
+import * as lsProtocol from 'vscode-languageserver-protocol';
+import { ServerCapabilities } from 'vscode-languageserver-protocol';
+import { ILspConnection, ILspOptions, IPosition, ITokenInfo } from './types';
 
-interface _FilesServerClientCapabilities {
+interface IFilesServerClientCapabilities {
   /* ... all fields from the base ClientCapabilities ... */
 
   /**
@@ -17,18 +17,18 @@ interface _FilesServerClientCapabilities {
    */
   xcontentProvider?: boolean;
 }
-type ExtendedClientCapabilities = lsProtocol.ClientCapabilities & _FilesServerClientCapabilities;
+type ExtendedClientCapabilities = lsProtocol.ClientCapabilities & IFilesServerClientCapabilities;
 
-class LspWsConnection extends events.EventEmitter implements LSPConnection {
-  private socket: WebSocket;
-  private documentInfo : LSPOptions;
-  private serverCapabilities: lsProtocol.ServerCapabilities;
-  private documentVersion = 0;
-  private connection : rpc.MessageConnection;
+class LspWsConnection extends events.EventEmitter implements ILspConnection {
 
   public showingTooltip = false;
+  private socket: WebSocket;
+  private documentInfo: ILspOptions;
+  private serverCapabilities: lsProtocol.ServerCapabilities;
+  private documentVersion = 0;
+  private connection: rpc.MessageConnection;
 
-  constructor(options: LSPOptions) {
+  constructor(options: ILspOptions) {
     super();
     this.documentInfo = options;
   }
@@ -36,7 +36,7 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
   /**
    * Initialize a connection over a web socket that speaks the LSP protocol
    */
-  connect(socket: WebSocket) : this {
+  public connect(socket: WebSocket): this {
     this.socket = socket;
 
     rpc.listen({
@@ -48,31 +48,33 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
         this.connection = connection;
         this.sendInitialize();
 
-        this.connection.onNotification('textDocument/publishDiagnostics', (params : lsProtocol.PublishDiagnosticsParams) => {
+        this.connection.onNotification('textDocument/publishDiagnostics', (
+          params: lsProtocol.PublishDiagnosticsParams,
+        ) => {
           this.emit('diagnostic', params);
         });
-  
-        this.connection.onNotification('window/showMessage', (params : lsProtocol.ShowMessageParams) => {
+
+        this.connection.onNotification('window/showMessage', (params: lsProtocol.ShowMessageParams) => {
           this.emit('logging', params);
         });
 
-        this.connection.onRequest('window/showMessageRequest', (params : lsProtocol.ShowMessageRequestParams) => {
+        this.connection.onRequest('window/showMessageRequest', (params: lsProtocol.ShowMessageRequestParams) => {
           this.emit('logging', params);
         });
 
         connection.onError((e) => {
           this.emit('error', e);
         });
-      }
+      },
     });
 
     return this;
   }
 
-  sendInitialize() {
-    let message : lsProtocol.InitializeParams = {
-      capabilities: <lsProtocol.ClientCapabilities> {
-        textDocument: <ExtendedClientCapabilities> {
+  public sendInitialize() {
+    const message: lsProtocol.InitializeParams = {
+      capabilities: {
+        textDocument: {
           hover: {
             dynamicRegistration: true,
             contentFormat: ['plaintext', 'markdown'],
@@ -98,33 +100,33 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
             dynamicRegistration: true,
             signatureInformation: {
               documentationFormat: ['plaintext', 'markdown'],
-            }
-          }
-        },
-        workspace: <lsProtocol.WorkspaceClientCapabilities> {
+            },
+          },
+        } as ExtendedClientCapabilities,
+        workspace: {
           didChangeConfiguration: {
             dynamicRegistration: true,
-          }
-        },
+          },
+        } as lsProtocol.WorkspaceClientCapabilities,
         // xfilesProvider: true,
         // xcontentProvider: true,
-      },
+      } as lsProtocol.ClientCapabilities,
       initializationOptions: null,
       processId: null,
       rootUri: this.documentInfo.rootUri,
       workspaceFolders: null,
-    }
+    };
 
-    this.connection.sendRequest('initialize', message).then((params : lsProtocol.InitializeResult) => {
-      this.serverCapabilities = <ServerCapabilities> params.capabilities;
-      let textDocumentMessage : lsProtocol.DidOpenTextDocumentParams = {
-        textDocument: <lsProtocol.TextDocumentItem> {
+    this.connection.sendRequest('initialize', message).then((params: lsProtocol.InitializeResult) => {
+      this.serverCapabilities = params.capabilities as ServerCapabilities;
+      const textDocumentMessage: lsProtocol.DidOpenTextDocumentParams = {
+        textDocument: {
           uri: this.documentInfo.documentUri,
           languageId: this.documentInfo.languageId,
           text: this.documentInfo.documentText(),
           version: this.documentVersion,
-        }
-      }
+        } as lsProtocol.TextDocumentItem,
+      };
       this.connection.sendNotification('initialized');
       this.connection.sendNotification('workspace/didChangeConfiguration', {
         settings: {},
@@ -132,16 +134,15 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
       this.connection.sendNotification('textDocument/didOpen', textDocumentMessage);
       this.sendChange();
     }, (e) => {
-      console.error(e);
     });
   }
 
-  sendChange() {
-    let textDocumentChange : lsProtocol.DidChangeTextDocumentParams = {
-      textDocument: <lsProtocol.VersionedTextDocumentIdentifier> {
+  public sendChange() {
+    const textDocumentChange: lsProtocol.DidChangeTextDocumentParams = {
+      textDocument: {
         uri: this.documentInfo.documentUri,
         version: this.documentVersion,
-      },
+      } as lsProtocol.VersionedTextDocumentIdentifier,
       contentChanges: [{
         text: this.documentInfo.documentText(),
       }],
@@ -150,8 +151,8 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
     this.documentVersion++;
   }
 
-  getHoverTooltip(location: IPosition) {
-    this.connection.sendRequest('textDocument/hover', <lsProtocol.TextDocumentPositionParams> {
+  public getHoverTooltip(location: IPosition) {
+    this.connection.sendRequest('textDocument/hover', {
       textDocument: {
         uri: this.documentInfo.documentUri,
       },
@@ -159,19 +160,24 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
         line: location.line,
         character: location.ch,
       },
-    }).then((params : lsProtocol.Hover) => {
+    } as lsProtocol.TextDocumentPositionParams).then((params: lsProtocol.Hover) => {
       if (params) {
         this.emit('hover', params);
       }
     });
   }
 
-  getCompletion(location: IPosition, token: TokenInfo, triggerCharacter?: string, triggerKind?: lsProtocol.CompletionTriggerKind) {
+  public getCompletion(
+    location: IPosition,
+    token: ITokenInfo,
+    triggerCharacter?: string,
+    triggerKind?: lsProtocol.CompletionTriggerKind,
+  ) {
     if (!(this.serverCapabilities && this.serverCapabilities.completionProvider)) {
       return;
     }
 
-    this.connection.sendRequest('textDocument/completion', <lsProtocol.CompletionParams> {
+    this.connection.sendRequest('textDocument/completion', {
       textDocument: {
         uri: this.documentInfo.documentUri,
       },
@@ -183,7 +189,7 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
         triggerKind: triggerKind || lsProtocol.CompletionTriggerKind.Invoked,
         triggerCharacter,
       },
-    }).then((params : lsProtocol.CompletionList) => {
+    } as lsProtocol.CompletionParams).then((params: lsProtocol.CompletionList) => {
       if (!(params && params.items.length)) {
         return;
       }
@@ -192,21 +198,21 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
     });
   }
 
-  getDetailedCompletion(completionItem: lsProtocol.CompletionItem) {
+  public getDetailedCompletion(completionItem: lsProtocol.CompletionItem) {
     this.connection.sendRequest('completionItem/resolve', completionItem)
       .then((result: lsProtocol.CompletionItem) => {
         this.emit('completionResolved', result);
       });
   }
 
-  getSignatureHelp(location: IPosition) {
+  public getSignatureHelp(location: IPosition) {
     if (!(this.serverCapabilities && this.serverCapabilities.signatureHelpProvider)) {
       return;
     }
 
-    let code = this.documentInfo.documentText();
-    let lines = code.split('\n');
-    let typedCharacter = lines[location.line][location.ch];
+    const code = this.documentInfo.documentText();
+    const lines = code.split('\n');
+    const typedCharacter = lines[location.line][location.ch];
 
     if (
       this.serverCapabilities.signatureHelpProvider &&
@@ -216,7 +222,7 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
       return;
     }
 
-    this.connection.sendRequest('textDocument/signatureHelp', <lsProtocol.TextDocumentPositionParams> {
+    this.connection.sendRequest('textDocument/signatureHelp', {
       textDocument: {
         uri: this.documentInfo.documentUri,
       },
@@ -224,7 +230,7 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
         line: location.line,
         character: location.ch,
       },
-    }).then((params : lsProtocol.SignatureHelp) => {
+    } as lsProtocol.TextDocumentPositionParams).then((params: lsProtocol.SignatureHelp) => {
       if (params) {
         this.emit('signature', params);
       }
@@ -234,12 +240,12 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
   /**
    * Request the locations of all matching document symbols
    */
-  getDocumentHighlights(location: IPosition) {
+  public getDocumentHighlights(location: IPosition) {
     if (!(this.serverCapabilities && this.serverCapabilities.documentHighlightProvider)) {
       return;
     }
-    
-    this.connection.sendRequest('textDocument/documentHighlight', <lsProtocol.TextDocumentPositionParams> {
+
+    this.connection.sendRequest('textDocument/documentHighlight', {
       textDocument: {
         uri: this.documentInfo.documentUri,
       },
@@ -247,7 +253,7 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
         line: location.line,
         character: location.ch,
       },
-    }).then((params: lsProtocol.DocumentHighlight[]) => {
+    } as lsProtocol.TextDocumentPositionParams).then((params: lsProtocol.DocumentHighlight[]) => {
       if (params) {
         this.emit('highlight', params);
       }
@@ -257,7 +263,7 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
   /**
    * The characters that trigger completion automatically.
    */
-  getLanguageCompletionCharacters() : string[] {
+  public getLanguageCompletionCharacters(): string[] {
     if (!(this.serverCapabilities && this.serverCapabilities.completionProvider)) {
       return [];
     }
@@ -267,7 +273,7 @@ class LspWsConnection extends events.EventEmitter implements LSPConnection {
   /**
    * The characters that trigger signature help automatically.
    */
-  getLanguageSignatureCharacters() : string[] {
+  public getLanguageSignatureCharacters(): string[] {
     if (!(this.serverCapabilities && this.serverCapabilities.signatureHelpProvider)) {
       return [];
     }
