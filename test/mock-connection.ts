@@ -1,5 +1,4 @@
 import sinon from 'sinon';
-import * as lsProtocol from 'vscode-languageserver-protocol';
 import { LSPConnection } from '../src'
 
 interface Listeners {

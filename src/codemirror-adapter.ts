@@ -221,7 +221,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
       let childEl = document.createElement('div');
       childEl.classList.add('CodeMirror-lsp-guttermarker');
-      childEl.title = `Line ${start.line}: ${diagnostic.message}`;
+      childEl.title = diagnostic.message;
       this.editor.setGutterMarker(start.line, 'CodeMirror-lsp', childEl);
     });
   }
