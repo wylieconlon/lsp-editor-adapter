@@ -10,21 +10,24 @@ module.exports = function(config) {
     ],
 
     browsers: ['ChromeHeadless'],
+
     mime: {
       'text/x-typescript': ['ts','tsx']
     },
 
+    module: 'commonjs',
+
     singleRun: true,
     autoWatch: false,
+    colors: true,
 
     frameworks: [
       'mocha',
     ],
 
-    module: 'commonjs',
 
     reporters: [
-      'mocha',
+      'mocha'
     ],
 
     preprocessors: {

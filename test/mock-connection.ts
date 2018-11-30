@@ -1,5 +1,5 @@
-import { LSPConnection } from '../src'
 import sinon from 'sinon';
+import { LSPConnection } from '../src'
 
 interface Listeners {
   [key: string]: ((arg: any) => void)[]
@@ -21,21 +21,21 @@ export class MockConnection implements LSPConnection {
   /**
    * Sends a synthetic event to the client code, for example to imitate a server response
    */
-  dispatchEvent = ((event: Event) => {
+  dispatchEvent = ((event: MessageEvent) => {
     let listeners = this.listeners[event.type];
     if (!listeners) {
       return false;
     }
-    listeners.forEach((listener) => listener.call(null, event));
+    listeners.forEach((listener) => listener.call(null, event.data));
   })
 
-  sendInitialize = sinon.mock()
-  sendChange = sinon.mock()
-  getHoverTooltip = sinon.mock()
-  getCompletion = sinon.mock()
-  getDetailedCompletion = sinon.mock()
-  getSignatureHelp = sinon.mock()
-  getDocumentHighlights = sinon.mock()
+  sendInitialize = sinon.stub()
+  sendChange = sinon.stub()
+  getHoverTooltip = sinon.stub()
+  getCompletion = sinon.stub()
+  getDetailedCompletion = sinon.stub()
+  getSignatureHelp = sinon.stub()
+  getDocumentHighlights = sinon.stub()
 
   getLanguageCompletionCharacters() {
     return ['.', ','];

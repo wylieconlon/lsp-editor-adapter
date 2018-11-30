@@ -43,18 +43,19 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     }, this.options.quickSuggestionsDelay));
   }
 
-  _resetState() {
+  _removeSignatureWidget() {
     if (this.signatureWidget) {
       this.signatureWidget.clear();
+      this.signatureWidget = null;
     }
   }
 
   handleMouseOver() {
     this.editor.getWrapperElement().addEventListener('mouseover', (ev : MouseEvent) => {
       let docPosition : IPosition = this.editor.coordsChar({
-        left: ev.pageX,
-        top: ev.pageY,
-      });
+        left: ev.screenX,
+        top: ev.screenY,
+      }, 'window');
 
       if (
         !this.hoverCharacter ||
@@ -80,7 +81,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
     if (typeof typedCharacter === 'undefined') {
       // Line was cleared
-      this._resetState();
+      this._removeSignatureWidget();
     } else if (completionCharacters.indexOf(typedCharacter) > -1) {
       this.token = this._getTokenEndingAtPosition(code, location, completionCharacters);
       this.connection.getCompletion(
@@ -101,7 +102,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
       );
       this.token = this._getTokenEndingAtPosition(code, location, completionCharacters.concat(signatureCharacters));
     } else {
-      this._resetState();
+      this._removeSignatureWidget();
     }
   }
 
@@ -141,7 +142,6 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
     this.hoverMarker = this.editor.getDoc().markText(start, end, {
       title: tooltipText,
-      // css: 'background-color: #ccf',
       css: 'text-decoration: underline',
     });
   }
@@ -180,11 +180,17 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
     let bestCompletions = this._getFilteredCompletions(this.token.text, completions);
 
+    let start = this.token.start;
+    if (/^\W$/.test(this.token.text)) {
+      // Special case for completion on the completion trigger itself, the completion goes after
+      start = this.token.end;
+    }
+
     this.editor.showHint(<CodeMirror.ShowHintOptions> {
       completeSingle: false,
       hint: () => {
         return {
-          from: this.token.start,
+          from: start,
           to: this.token.end,
           list: bestCompletions.map((completion) => completion.label),
         };
@@ -193,9 +199,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   handleDiagnostic(response: lsProtocol.PublishDiagnosticsParams) {
-    // TODO: Mark this in the gutter
-    let el = document.querySelector('.diagnostics');
-    el.innerHTML = '';
+    this.editor.clearGutter('CodeMirror-lsp');
     this.markedDiagnostics.forEach((marker) => {
       marker.clear();
     });
@@ -215,23 +219,21 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
         className: 'cm-error',
       }));
 
-      let childEl = document.createElement('p');
-      childEl.innerText = `Line ${start.line}: ${diagnostic.message}`;
-      el.appendChild(childEl);
+      let childEl = document.createElement('div');
+      childEl.classList.add('CodeMirror-lsp-guttermarker');
+      childEl.title = diagnostic.message;
+      this.editor.setGutterMarker(start.line, 'CodeMirror-lsp', childEl);
     });
   }
 
   handleSignature(result: lsProtocol.SignatureHelp) {
-    if (this.signatureWidget && (!this.token || !result.signatures.length)) {
-      this.signatureWidget.clear();
-      this.signatureWidget = null;
-    }
+    this._removeSignatureWidget();
     if (!result.signatures.length || !this.token) {
       return;
     }
 
     let htmlElement = document.createElement('div');
-    htmlElement.setAttribute('style', 'font-size: 12px; border: 1px solid black;');
+    htmlElement.classList.add('CodeMirror-lsp-signature');
     result.signatures.forEach((item : lsProtocol.SignatureInformation) => {
       let el = document.createElement('div');
       el.innerText = item.label;
@@ -277,7 +279,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   private _getFilteredCompletions(triggerWord : string, items: lsProtocol.CompletionItem[]) : lsProtocol.CompletionItem[] {
-    if (!triggerWord) {
+    if (/\W+/.test(triggerWord)) {
       return items;
     }
     let word = triggerWord.toLowerCase();
