@@ -1,55 +1,60 @@
 import * as lsProtocol from 'vscode-languageserver-protocol';
 
 export interface IPosition {
-  line: number,
-  ch: number,
+  line: number;
+  ch: number;
 }
 
-export interface TokenInfo {
-  start: IPosition,
-  end: IPosition,
-  text: string,
+export interface ITokenInfo {
+  start: IPosition;
+  end: IPosition;
+  text: string;
 }
 
-export interface LSPConnection {
-  on(event : 'completion', callback : (items: lsProtocol.CompletionItem[]) => void) : void,
-  on(event : 'completionResolved', callback : (item: lsProtocol.CompletionItem) => void) : void,
-  on(event : 'hover', callback : (hover: lsProtocol.Hover) => void) : void,
-  on(event : 'diagnostic', callback : (diagnostic: lsProtocol.PublishDiagnosticsParams) => void) : void,
-  on(event : 'highlight', callback : (highlights: lsProtocol.DocumentHighlight[]) => void) : void,
-  on(event : 'signature', callback : (signatures: lsProtocol.SignatureHelp) => void) : void,
-  on(event : 'error', callback : (error: any) => void) : void,
-  on(event : 'logging', callback : (log: any) => void) : void,
+export interface ILspConnection {
+  on(event: 'completion', callback: (items: lsProtocol.CompletionItem[]) => void): void;
+  on(event: 'completionResolved', callback: (item: lsProtocol.CompletionItem) => void): void;
+  on(event: 'hover', callback: (hover: lsProtocol.Hover) => void): void;
+  on(event: 'diagnostic', callback: (diagnostic: lsProtocol.PublishDiagnosticsParams) => void): void;
+  on(event: 'highlight', callback: (highlights: lsProtocol.DocumentHighlight[]) => void): void;
+  on(event: 'signature', callback: (signatures: lsProtocol.SignatureHelp) => void): void;
+  on(event: 'error', callback: (error: any) => void): void;
+  on(event: 'logging', callback: (log: any) => void): void;
 
   // This should support every method from https://microsoft.github.io/language-server-protocol/specification
   /**
    * The initialize request tells the server which options the client supports
    */
-  sendInitialize() : void,
+  sendInitialize(): void;
   /**
    * Sends the full text of the document to the server
    */
-  sendChange() : void,
+  sendChange(): void;
   /**
    * Requests additional information for a particular character
    */
-  getHoverTooltip(position: IPosition) : void,
+  getHoverTooltip(position: IPosition): void;
   /**
    * Request possible completions from the server
    */
-  getCompletion(location: IPosition, token: TokenInfo, triggerCharacter?: string, triggerKind?: lsProtocol.CompletionTriggerKind) : void,
+  getCompletion(
+    location: IPosition,
+    token: ITokenInfo,
+    triggerCharacter?: string,
+    triggerKind?: lsProtocol.CompletionTriggerKind,
+  ): void;
   /**
    * If the server returns incomplete information for completion items, more information can be requested
    */
-  getDetailedCompletion(item: lsProtocol.CompletionItem) : void,
+  getDetailedCompletion(item: lsProtocol.CompletionItem): void;
   /**
    * Request possible signatures for the current method
    */
-  getSignatureHelp(position: IPosition) : void,
+  getSignatureHelp(position: IPosition): void;
   /**
    * Request all matching symbols in the document scope
    */
-  getDocumentHighlights(position: IPosition) : void,
+  getDocumentHighlights(position: IPosition): void;
 
   // TODO:
   // Workspaces: Not in scope
@@ -78,8 +83,8 @@ export interface LSPConnection {
   // prepareRename
   // foldingRange
 
-  getLanguageCompletionCharacters() : string[],
-  getLanguageSignatureCharacters() : string[],
+  getLanguageCompletionCharacters(): string[];
+  getLanguageSignatureCharacters(): string[];
 }
 
 /**
@@ -139,7 +144,8 @@ export interface ITextEditorOptions {
    */
   folding?: boolean;
   /**
-   * Selects the folding strategy. 'auto' uses the strategies contributed for the current document, 'indentation' uses the indentation based folding strategy.
+   * Selects the folding strategy. 'auto' uses the strategies contributed for the current document,
+   * 'indentation' uses the indentation based folding strategy.
    * Defaults to 'auto'.
    */
   foldingStrategy?: 'auto' | 'indentation';
@@ -192,12 +198,12 @@ export interface ITextEditorOptions {
   formatOnPaste?: boolean;
 }
 
-export interface LSPOptions {
-  serverUri: string,
-  languageId: string,
-  documentUri: string,
-  documentText: (() => string),
-  rootUri: string,
+export interface ILspOptions {
+  serverUri: string;
+  languageId: string;
+  documentUri: string;
+  documentText: (() => string);
+  rootUri: string;
 }
 
 /**
@@ -205,10 +211,10 @@ export interface LSPOptions {
  * and will send messages over the connection and display responses in the editor
  */
 export abstract class IEditorAdapter<T> {
-  constructor(connection: LSPConnection, options: ITextEditorOptions, editor: T) {}
+  constructor(connection: ILspConnection, options: ITextEditorOptions, editor: T) {}
 }
 
-export function getFilledDefaults(options: ITextEditorOptions) : ITextEditorOptions {
+export function getFilledDefaults(options: ITextEditorOptions): ITextEditorOptions {
   return Object.assign({}, {
     suggestOnTriggerCharacters: true,
     acceptSuggestionOnEnter: true,
@@ -229,4 +235,4 @@ export function getFilledDefaults(options: ITextEditorOptions) : ITextEditorOpti
     formatOnType: false,
     formatOnPaste: false,
   }, options);
-};
+}

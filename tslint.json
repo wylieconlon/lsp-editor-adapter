@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json.schemastore.org/tslint",
+  "extends": "tslint:recommended",
+  "rules": {
+    "quotemark": {
+      "options": ["single"]
+    },
+    "object-literal-sort-keys": false,
+    "no-empty": false,
+    "no-console": true
+  },
+  "linterOptions": {
+    "exclude": ["*/node_modules/**/*"]
+  }
+}
