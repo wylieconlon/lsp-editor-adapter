@@ -18,6 +18,8 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   private highlightMarkers: CodeMirror.TextMarker[] = [];
   private hoverCharacter: IPosition;
   private debouncedGetHover: (position: IPosition) => void;
+  private connectionListeners: { [key: string]: () => void } = {};
+  private editorListeners: { [key: string]: () => void } = {};
 
   constructor(connection: ILspConnection, options: ITextEditorOptions, editor: CodeMirror.Editor) {
     super(connection, options, editor);
@@ -25,39 +27,26 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     this.options = getFilledDefaults(options);
     this.editor = editor;
 
-    this.editor.on('change', debounce(this.handleChange.bind(this), options.debounceSuggestionsWhileTyping));
-    this.connection.on('hover', this.handleHover.bind(this));
-    this.connection.on('highlight', this.handleHighlight.bind(this));
-    this.connection.on('completion', this.handleCompletion.bind(this));
-    this.connection.on('signature', this.handleSignature.bind(this));
-    this.connection.on('diagnostic', this.handleDiagnostic.bind(this));
-
     this.debouncedGetHover = debounce((position: IPosition) => {
       this.connection.getHoverTooltip(position);
     }, this.options.quickSuggestionsDelay);
 
-    this.handleMouseOver();
-
-    this.editor.on('cursorActivity', debounce(() => {
-      this.connection.getDocumentHighlights(this.editor.getDoc().getCursor('start'));
-    }, this.options.quickSuggestionsDelay));
+    this._addListeners();
   }
 
-  public handleMouseOver() {
-    this.editor.getWrapperElement().addEventListener('mouseover', (ev: MouseEvent) => {
-      const docPosition: IPosition = this.editor.coordsChar({
-        left: ev.clientX,
-        top: ev.clientY,
-      }, 'window');
+  public handleMouseOver(ev: MouseEvent) {
+    const docPosition: IPosition = this.editor.coordsChar({
+      left: ev.clientX,
+      top: ev.clientY,
+    }, 'window');
 
-      if (
-        !this.hoverCharacter ||
-        (docPosition.line !== this.hoverCharacter.line && docPosition.ch !== this.hoverCharacter.ch)
-      ) {
-        this.hoverCharacter = docPosition;
-        this.debouncedGetHover(docPosition);
-      }
-    });
+    if (
+      !this.hoverCharacter ||
+      (docPosition.line !== this.hoverCharacter.line && docPosition.ch !== this.hoverCharacter.ch)
+    ) {
+      this.hoverCharacter = docPosition;
+      this.debouncedGetHover(docPosition);
+    }
   }
 
   public handleChange(cm: CodeMirror.Editor, change: CodeMirror.EditorChange) {
@@ -100,14 +89,12 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   public handleHover(response: lsProtocol.Hover) {
+    this._removeHover();
+
     if (!response.contents || (Array.isArray(response.contents) && response.contents.length === 0)) {
       return;
     }
 
-    if (this.hoverMarker) {
-      this.hoverMarker.clear();
-      this.hoverMarker = null;
-    }
     const start = {
       line: response.range.start.line,
       ch: response.range.start.character,
@@ -237,7 +224,50 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     });
   }
 
-  public _getTokenEndingAtPosition(code: string, location: IPosition, splitCharacters: string[]): ITokenInfo {
+  public remove() {
+    this._removeSignatureWidget();
+    this._removeHover();
+    // Show-hint addon doesn't remove itself. This could remove other uses in the project
+    document.querySelectorAll('.CodeMirror-hints').forEach((e) => e.remove());
+    this.editor.off('change', this.editorListeners.change);
+    this.editor.off('cursorActivity', this.editorListeners.cursorActivity);
+    this.editor.getWrapperElement().removeEventListener('mouseover', this.editorListeners.mouseover);
+    Object.keys(this.connectionListeners).forEach((key) => {
+      this.connection.off(key as any, this.connectionListeners[key]);
+    });
+  }
+
+  private _addListeners() {
+    const changeListener = debounce(this.handleChange.bind(this), this.options.debounceSuggestionsWhileTyping);
+    this.editor.on('change', changeListener);
+    this.editorListeners.change = changeListener;
+
+    const self = this;
+    this.connectionListeners = {
+      hover: this.handleHover.bind(self),
+      highlight: this.handleHighlight.bind(self),
+      completion: this.handleCompletion.bind(self),
+      signature: this.handleSignature.bind(self),
+      diagnostic: this.handleDiagnostic.bind(self),
+    };
+
+    Object.keys(this.connectionListeners).forEach((key) => {
+      this.connection.on(key as any, this.connectionListeners[key]);
+    });
+
+    const mouseOverListener = this.handleMouseOver.bind(this);
+    this.editor.getWrapperElement().addEventListener('mouseover', mouseOverListener);
+    this.editorListeners.mouseover = mouseOverListener;
+
+    const debouncedCursor = debounce(() => {
+      this.connection.getDocumentHighlights(this.editor.getDoc().getCursor('start'));
+    }, this.options.quickSuggestionsDelay);
+
+    this.editor.on('cursorActivity', debouncedCursor);
+    this.editorListeners.cursorActivity = debouncedCursor;
+  }
+
+  private _getTokenEndingAtPosition(code: string, location: IPosition, splitCharacters: string[]): ITokenInfo {
     const lines = code.split('\n');
     const line = lines[location.line];
     const typedCharacter = line[location.ch - 1];
@@ -299,6 +329,12 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     }
   }
 
+  private _removeHover() {
+    if (this.hoverMarker) {
+      this.hoverMarker.clear();
+      this.hoverMarker = null;
+    }
+  }
 }
 
 export default CodeMirrorAdapter;

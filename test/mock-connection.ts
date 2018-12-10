@@ -28,6 +28,7 @@ export class MockConnection implements ILspConnection {
   public getDetailedCompletion = sinon.stub();
   public getSignatureHelp = sinon.stub();
   public getDocumentHighlights = sinon.stub();
+  public close = sinon.stub();
 
   constructor() {}
 
@@ -35,6 +36,16 @@ export class MockConnection implements ILspConnection {
     const listeners = this.listeners[type];
     if (!listeners) { this.listeners[type] = []; }
     this.listeners[type].push(listener);
+  }
+
+  public off(type: string, listener: (arg: any) => void) {
+    const listeners = this.listeners[type];
+    if (!listeners) { return; }
+
+    const index = listeners.findIndex((l) => l === listener);
+    if (index > -1) {
+      this.listeners[type].splice(index);
+    }
   }
 
   public getLanguageCompletionCharacters() {

@@ -11,6 +11,9 @@ export interface ITokenInfo {
   text: string;
 }
 
+type ConnectionEvent = 'completion' | 'completionResolved' | 'hover' | 'diagnostic' | 'highlight' |
+  'signature' | 'error' | 'logging';
+
 export interface ILspConnection {
   on(event: 'completion', callback: (items: lsProtocol.CompletionItem[]) => void): void;
   on(event: 'completionResolved', callback: (item: lsProtocol.CompletionItem) => void): void;
@@ -20,6 +23,13 @@ export interface ILspConnection {
   on(event: 'signature', callback: (signatures: lsProtocol.SignatureHelp) => void): void;
   on(event: 'error', callback: (error: any) => void): void;
   on(event: 'logging', callback: (log: any) => void): void;
+
+  off(event: ConnectionEvent, listener: (arg: any) => void): void;
+
+  /**
+   * Close the connection
+   */
+  close(): void;
 
   // This should support every method from https://microsoft.github.io/language-server-protocol/specification
   /**
@@ -212,6 +222,11 @@ export interface ILspOptions {
  */
 export abstract class IEditorAdapter<T> {
   constructor(connection: ILspConnection, options: ITextEditorOptions, editor: T) {}
+
+  /**
+   * Removes the adapter from the editor and closes the connection
+   */
+  public abstract remove(): void;
 }
 
 export function getFilledDefaults(options: ITextEditorOptions): ITextEditorOptions {

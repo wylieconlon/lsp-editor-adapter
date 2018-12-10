@@ -228,3 +228,31 @@ describe('LspWsConnection', () => {
     });
   });
 });
+
+describe('cleanup', () => {
+  let connection: LspWsConnection;
+  let mockSocket: MockSocket;
+
+  beforeEach(() => {
+    connection = new LspWsConnection({
+      languageId: 'plaintext',
+      rootUri: 'file://' + __dirname,
+      documentUri: 'file://' + __dirname,
+      serverUri,
+      documentText: () => '',
+    });
+    mockSocket = new MockSocket('ws://localhost:8080');
+  });
+
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  it('closes the socket connection and stops sending messages', () => {
+    connection.connect(mockSocket);
+    connection.close();
+
+    connection.sendChange();
+    expect(mockSocket.send.callCount).toEqual(0);
+  });
+});

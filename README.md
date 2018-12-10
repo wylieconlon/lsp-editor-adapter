@@ -61,7 +61,7 @@ let lspConnection = new LspWsConnection(editor)
   .connect(new WebSocket('ws://localhost:8080'));
 
 // The adapter is what allows the editor to provide UI elements
-new CodeMirrorAdapter(lspConnection, {
+let adapter = new CodeMirrorAdapter(lspConnection, {
   // UI-related options go here, allowing you to control the automatic features of the LSP, i.e.
   suggestOnTriggerCharacters: false
 }, editor);
@@ -70,6 +70,10 @@ new CodeMirrorAdapter(lspConnection, {
 lspConnection.on('error', (e) => {
   console.error(e)
 });
+
+// To clean up the adapter and connection:
+adapter.remove();
+lspConnection.close();
 ```
 
 ## Running the example

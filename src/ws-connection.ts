@@ -75,6 +75,13 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
     return this;
   }
 
+  public close() {
+    if (this.connection) {
+      this.connection.dispose();
+    }
+    this.socket.close();
+  }
+
   public sendInitialize() {
     if (!this.isConnected) {
       return;
