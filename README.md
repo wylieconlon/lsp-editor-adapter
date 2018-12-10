@@ -65,6 +65,11 @@ new CodeMirrorAdapter(lspConnection, {
   // UI-related options go here, allowing you to control the automatic features of the LSP, i.e.
   suggestOnTriggerCharacters: false
 }, editor);
+
+// You can also provide your own hooks:
+lspConnection.on('error', (e) => {
+  console.error(e)
+});
 ```
 
 ## Running the example
