@@ -62,8 +62,8 @@ describe('CodeMirror adapter', () => {
       const screenPos = editor.charCoords(pos, 'window');
 
       editor.getWrapperElement().dispatchEvent(new MouseEvent('mouseover', {
-        screenX: screenPos.left,
-        screenY: screenPos.top,
+        clientX: screenPos.left,
+        clientY: screenPos.top,
       }));
 
       clock.tick(10);
