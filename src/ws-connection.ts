@@ -20,8 +20,7 @@ interface IFilesServerClientCapabilities {
 type ExtendedClientCapabilities = lsProtocol.ClientCapabilities & IFilesServerClientCapabilities;
 
 class LspWsConnection extends events.EventEmitter implements ILspConnection {
-
-  public showingTooltip = false;
+  private isConnected = false;
   private socket: WebSocket;
   private documentInfo: ILspOptions;
   private serverCapabilities: lsProtocol.ServerCapabilities;
@@ -44,6 +43,7 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
       logger: new ConsoleLogger(),
       onConnection: (connection: rpc.MessageConnection) => {
         connection.listen();
+        this.isConnected = true;
 
         this.connection = connection;
         this.sendInitialize();
@@ -62,8 +62,12 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
           this.emit('logging', params);
         });
 
-        connection.onError((e) => {
+        this.connection.onError((e) => {
           this.emit('error', e);
+        });
+
+        this.connection.onClose(() => {
+          this.isConnected = false;
         });
       },
     });
@@ -72,6 +76,10 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
   }
 
   public sendInitialize() {
+    if (!this.isConnected) {
+      return;
+    }
+
     const message: lsProtocol.InitializeParams = {
       capabilities: {
         textDocument: {
@@ -138,6 +146,9 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
   }
 
   public sendChange() {
+    if (!this.isConnected) {
+      return;
+    }
     const textDocumentChange: lsProtocol.DidChangeTextDocumentParams = {
       textDocument: {
         uri: this.documentInfo.documentUri,
@@ -152,6 +163,9 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
   }
 
   public getHoverTooltip(location: IPosition) {
+    if (!this.isConnected) {
+      return;
+    }
     this.connection.sendRequest('textDocument/hover', {
       textDocument: {
         uri: this.documentInfo.documentUri,
@@ -173,6 +187,9 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
     triggerCharacter?: string,
     triggerKind?: lsProtocol.CompletionTriggerKind,
   ) {
+    if (!this.isConnected) {
+      return;
+    }
     if (!(this.serverCapabilities && this.serverCapabilities.completionProvider)) {
       return;
     }
@@ -199,6 +216,9 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
   }
 
   public getDetailedCompletion(completionItem: lsProtocol.CompletionItem) {
+    if (!this.isConnected) {
+      return;
+    }
     this.connection.sendRequest('completionItem/resolve', completionItem)
       .then((result: lsProtocol.CompletionItem) => {
         this.emit('completionResolved', result);
@@ -206,6 +226,9 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
   }
 
   public getSignatureHelp(location: IPosition) {
+    if (!this.isConnected) {
+      return;
+    }
     if (!(this.serverCapabilities && this.serverCapabilities.signatureHelpProvider)) {
       return;
     }
@@ -241,6 +264,9 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
    * Request the locations of all matching document symbols
    */
   public getDocumentHighlights(location: IPosition) {
+    if (!this.isConnected) {
+      return;
+    }
     if (!(this.serverCapabilities && this.serverCapabilities.documentHighlightProvider)) {
       return;
     }
@@ -264,6 +290,9 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
    * The characters that trigger completion automatically.
    */
   public getLanguageCompletionCharacters(): string[] {
+    if (!this.isConnected) {
+      return;
+    }
     if (!(this.serverCapabilities && this.serverCapabilities.completionProvider)) {
       return [];
     }
@@ -274,6 +303,9 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
    * The characters that trigger signature help automatically.
    */
   public getLanguageSignatureCharacters(): string[] {
+    if (!this.isConnected) {
+      return;
+    }
     if (!(this.serverCapabilities && this.serverCapabilities.signatureHelpProvider)) {
       return [];
     }
