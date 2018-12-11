@@ -1,10 +1,12 @@
-# lsp-editor-adapter
+# lsp-editor-adapter (alpha)
 
 A library that automatically presents IDE-like elements for code editors in the browser using the the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/).
 
 Currently, you can connect a [CodeMirror](https://codemirror.net/) document to a language server over WebSockets.
 Future work will support language servers running in-browser, such as via Service Worker, and also support the
 Ace editor.
+
+_This library is in development. Opening issues and pull requests is greatly appreciated!_
 
 ## Features
 
@@ -35,6 +37,7 @@ import * as CodeMirror from 'codemirror';
 import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/show-hint';
 
+// Each adapter can have its own CSS
 import 'lsp-editor-adapter/lib/codemirror-lsp.css';
 import { LspWsConnection, CodeMirrorAdapter } from 'lsp-editor-adapter';
 
