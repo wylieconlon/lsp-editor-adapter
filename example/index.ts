@@ -99,8 +99,14 @@ let css = {
 };
 
 let htmlConnection = new LspWsConnection(html).connect(new WebSocket(html.serverUri));
-let htmlAdapter = new CodeMirrorAdapter(htmlConnection, {}, htmlEditor);
+let htmlAdapter = new CodeMirrorAdapter(htmlConnection, {
+  quickSuggestionsDelay: 100,
+}, htmlEditor);
 let cssConnection = new LspWsConnection(css).connect(new WebSocket(css.serverUri));
-let cssAdapter = new CodeMirrorAdapter(cssConnection, {}, cssEditor);
+let cssAdapter = new CodeMirrorAdapter(cssConnection, {
+  quickSuggestionsDelay: 100,
+}, cssEditor);
 let jsConnection = new LspWsConnection(js).connect(new WebSocket(js.serverUri));
-let jsAdapter = new CodeMirrorAdapter(jsConnection, {}, jsEditor);
+let jsAdapter = new CodeMirrorAdapter(jsConnection, {
+  quickSuggestionsDelay: 100,
+}, jsEditor);

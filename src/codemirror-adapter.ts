@@ -6,6 +6,11 @@ import * as lsProtocol from 'vscode-languageserver-protocol';
 import { MarkupContent } from 'vscode-languageserver-protocol';
 import { getFilledDefaults, IEditorAdapter, ILspConnection, IPosition, ITextEditorOptions, ITokenInfo } from './types';
 
+interface IScreenCoord {
+  x: number;
+  y: number;
+}
+
 class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   public options: ITextEditorOptions;
   public editor: CodeMirror.Editor;
@@ -20,6 +25,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   private debouncedGetHover: (position: IPosition) => void;
   private connectionListeners: { [key: string]: () => void } = {};
   private editorListeners: { [key: string]: () => void } = {};
+  private tooltip: HTMLElement;
 
   constructor(connection: ILspConnection, options: ITextEditorOptions, editor: CodeMirror.Editor) {
     super(connection, options, editor);
@@ -90,8 +96,9 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
   public handleHover(response: lsProtocol.Hover) {
     this._removeHover();
+    this._removeTooltip();
 
-    if (!response.contents || (Array.isArray(response.contents) && response.contents.length === 0)) {
+    if (!response || !response.contents || (Array.isArray(response.contents) && response.contents.length === 0)) {
       return;
     }
 
@@ -121,8 +128,15 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     }
 
     this.hoverMarker = this.editor.getDoc().markText(start, end, {
-      title: tooltipText,
       css: 'text-decoration: underline',
+    });
+
+    const htmlElement = document.createElement('div');
+    htmlElement.innerText = tooltipText;
+    const coords = this.editor.charCoords(start, 'page');
+    this._showTooltip(htmlElement, {
+      x: coords.left,
+      y: coords.top,
     });
   }
 
@@ -208,25 +222,28 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
   public handleSignature(result: lsProtocol.SignatureHelp) {
     this._removeSignatureWidget();
-    if (!result.signatures.length || !this.token) {
+    this._removeTooltip();
+    if (!result || !result.signatures.length || !this.token) {
       return;
     }
 
     const htmlElement = document.createElement('div');
-    htmlElement.classList.add('CodeMirror-lsp-signature');
     result.signatures.forEach((item: lsProtocol.SignatureInformation) => {
       const el = document.createElement('div');
       el.innerText = item.label;
       htmlElement.appendChild(el);
     });
-    this.signatureWidget = this.editor.addLineWidget(this.token.start.line, htmlElement, {
-      above: true,
+    const coords = this.editor.charCoords(this.token.start, 'page');
+    this._showTooltip(htmlElement, {
+      x: coords.left,
+      y: coords.top,
     });
   }
 
   public remove() {
     this._removeSignatureWidget();
     this._removeHover();
+    this._removeTooltip();
     // Show-hint addon doesn't remove itself. This could remove other uses in the project
     document.querySelectorAll('.CodeMirror-hints').forEach((e) => e.remove());
     this.editor.off('change', this.editorListeners.change);
@@ -322,10 +339,41 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     });
   }
 
+  private _showTooltip(el: HTMLElement, coords: IScreenCoord) {
+    this._removeTooltip();
+
+    let top = coords.y - this.editor.defaultTextHeight();
+
+    this.tooltip = document.createElement('div');
+    this.tooltip.classList.add('CodeMirror-lsp-tooltip');
+    this.tooltip.style.left = `${coords.x}px`;
+    this.tooltip.style.top = `${top}px`;
+    this.tooltip.appendChild(el);
+    document.body.appendChild(this.tooltip);
+
+    // Measure and reposition after rendering first version
+    requestAnimationFrame(() => {
+      top += this.editor.defaultTextHeight();
+      top -= this.tooltip.offsetHeight;
+
+      this.tooltip.style.left = `${coords.x}px`;
+      this.tooltip.style.top = `${top}px`;
+    });
+  }
+
+  private _removeTooltip() {
+    if (this.tooltip) {
+      this.tooltip.remove();
+    }
+  }
+
   private _removeSignatureWidget() {
     if (this.signatureWidget) {
       this.signatureWidget.clear();
       this.signatureWidget = null;
+    }
+    if (this.tooltip) {
+      this._removeTooltip();
     }
   }
 

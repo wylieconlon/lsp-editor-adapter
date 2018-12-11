@@ -9,8 +9,11 @@
   background-color: #900;
 }
 
-.CodeMirror-lsp-signature {
+.CodeMirror-lsp-tooltip {
+  position: absolute;
   font-size: 12px;
+  background: white;
   border: 1px solid black;
   padding: 2px;
+  z-index: 2;
 }

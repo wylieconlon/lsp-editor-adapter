@@ -182,9 +182,7 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
         character: location.ch,
       },
     } as lsProtocol.TextDocumentPositionParams).then((params: lsProtocol.Hover) => {
-      if (params) {
-        this.emit('hover', params);
-      }
+      this.emit('hover', params);
     });
   }
 
@@ -214,11 +212,7 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
         triggerCharacter,
       },
     } as lsProtocol.CompletionParams).then((params: lsProtocol.CompletionList) => {
-      if (!(params && params.items.length)) {
-        return;
-      }
-
-      this.emit('completion', params.items);
+      this.emit('completion', params ? params.items : null);
     });
   }
 
@@ -261,9 +255,7 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
         character: location.ch,
       },
     } as lsProtocol.TextDocumentPositionParams).then((params: lsProtocol.SignatureHelp) => {
-      if (params) {
-        this.emit('signature', params);
-      }
+      this.emit('signature', params);
     });
   }
 
@@ -287,9 +279,7 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
         character: location.ch,
       },
     } as lsProtocol.TextDocumentPositionParams).then((params: lsProtocol.DocumentHighlight[]) => {
-      if (params) {
-        this.emit('highlight', params);
-      }
+      this.emit('highlight', params);
     });
   }
 
