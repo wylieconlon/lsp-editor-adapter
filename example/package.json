@@ -2,7 +2,8 @@
   "scripts": {
     "prepare": "rimraf dist && webpack",
     "proxy": "jsonrpc-ws-proxy --languageServers config.yml",
-    "start": "npm run prepare && concurrently \"npm run proxy\" \"node server.js\""
+    "start": "npm run prepare && concurrently \"npm run proxy\" \"node server.js\"",
+    "dev": "concurrently \"npx webpack --watch\" \"npm run proxy\" \"node server.js\""
   },
   "license": "ISC",
   "dependencies": {

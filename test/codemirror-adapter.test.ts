@@ -96,6 +96,8 @@ describe('CodeMirror adapter', () => {
       }));
 
       expect(editor.getDoc().getAllMarks().length).toEqual(1);
+
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(1);
     });
 
     it('should clear the hover if the server returns no results', () => {
@@ -116,6 +118,7 @@ describe('CodeMirror adapter', () => {
       }));
 
       expect(editor.getDoc().getAllMarks().length).toEqual(1);
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(1);
 
       connection.dispatchEvent(new MessageEvent('hover', {
         data: {
@@ -125,6 +128,7 @@ describe('CodeMirror adapter', () => {
       }));
 
       expect(editor.getDoc().getAllMarks().length).toEqual(0);
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(0);
     });
   });
 
@@ -262,7 +266,7 @@ describe('CodeMirror adapter', () => {
       }));
 
       clock.tick(defaults.debounceSuggestionsWhileTyping);
-      expect(document.querySelectorAll('.CodeMirror-lsp-signature').length).toEqual(1);
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(1);
     });
 
     it('clears signature suggestions after typing more', () => {
@@ -280,7 +284,7 @@ describe('CodeMirror adapter', () => {
 
       editor.getDoc().setValue('console.log("hello");');
       clock.tick(defaults.debounceSuggestionsWhileTyping);
-      expect(document.querySelectorAll('.CodeMirror-lsp-signature').length).toEqual(0);
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(0);
     });
   });
 

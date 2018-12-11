@@ -168,84 +168,192 @@ describe('LspWsConnection', () => {
     expect(JSON.parse(mockSocket.send.firstCall.args[0]).method).toEqual('initialize');
   });
 
-  it('handles hover events', (done) => {
-    const hoverResponse = {
-      contents: 'Details of hover',
-      range: {
-        start: {
+  describe('hover', () => {
+    let hoverResponse: lsProtocol.Hover;
+
+    beforeEach(() => {
+      // Fake response just includes the hover provider
+      mockSocket.send.onFirstCall().callsFake((str) => {
+        const data = JSON.stringify({
+          jsonrpc: '2.0',
+          id: 0,
+          result: {
+            capabilities: {
+              hoverProvider: true,
+            },
+          } as lsProtocol.InitializeResult,
+        });
+
+        mockSocket.dispatchEvent(new MessageEvent('message', { data }));
+      });
+
+      // 2. After receiving capabilities from the server, we will send a hover
+      mockSocket.send.onSecondCall().callsFake((str) => {
+        connection.getHoverTooltip({
           line: 1,
-          character: 0,
-        },
-        end: {
-          line: 2,
-          character: 0,
-        },
-      },
-    } as lsProtocol.Hover;
+          ch: 0,
+        });
+      });
 
-    // Fake response just includes the hover provider
-    mockSocket.send.onFirstCall().callsFake((str) => {
-      const data = JSON.stringify({
-        jsonrpc: '2.0',
-        id: 0,
-        result: {
-          capabilities: {
-            hoverProvider: true,
+    });
+
+    it('emits a null hover event', (done) => {
+      // 3. Fake a server response for the hover
+      mockSocket.send.onThirdCall().callsFake((str) => {
+        const message = JSON.parse(str);
+
+        const data = JSON.stringify({
+          jsonrpc: '2.0',
+          id: message.id,
+          result: null,
+        });
+
+        mockSocket.dispatchEvent(new MessageEvent('message', { data }));
+      });
+
+      connection.connect(mockSocket);
+      mockSocket.dispatchEvent(new Event('open'));
+
+      connection.on('hover', (response) => {
+        expect(response).toBeNull();
+        done();
+      });
+    });
+
+    it('emits a complete hover event', (done) => {
+      hoverResponse = {
+        contents: 'Details of hover',
+        range: {
+          start: {
+                line: 1,
+            character: 0,
           },
-        } as lsProtocol.InitializeResult,
+          end: {
+            line: 2,
+            character: 0,
+          },
+        },
+      } as lsProtocol.Hover;
+
+      // 3. Fake a server response for the hover
+      mockSocket.send.onThirdCall().callsFake((str) => {
+        const message = JSON.parse(str);
+
+        const data = JSON.stringify({
+          jsonrpc: '2.0',
+          id: message.id,
+          result: hoverResponse,
+        });
+
+        mockSocket.dispatchEvent(new MessageEvent('message', { data }));
       });
 
-      mockSocket.dispatchEvent(new MessageEvent('message', { data }));
-    });
+      connection.connect(mockSocket);
+      mockSocket.dispatchEvent(new Event('open'));
 
-    // 2. After receiving capabilities from the server, we will send a hover
-    mockSocket.send.onSecondCall().callsFake((str) => {
-      connection.getHoverTooltip({
-        line: 1,
-        ch: 0,
+      connection.on('hover', (response) => {
+        expect(response).toEqual(hoverResponse);
+        done();
       });
-    });
-
-    // 3. Fake a server response for the hover
-    mockSocket.send.onThirdCall().callsFake((str) => {
-      const message = JSON.parse(str);
-
-      const data = JSON.stringify({
-        jsonrpc: '2.0',
-        id: message.id,
-        result: hoverResponse,
-      });
-
-      mockSocket.dispatchEvent(new MessageEvent('message', { data }));
-    });
-
-    connection.connect(mockSocket);
-    mockSocket.dispatchEvent(new Event('open'));
-
-    connection.on('hover', (response) => {
-      expect(response).toEqual(hoverResponse);
-      done();
     });
   });
-});
 
-describe('cleanup', () => {
-  let connection: LspWsConnection;
-  let mockSocket: MockSocket;
+  describe('completion', () => {
+    let completionResponse: lsProtocol.CompletionList;
 
-  beforeEach(() => {
-    connection = new LspWsConnection({
-      languageId: 'plaintext',
-      rootUri: 'file://' + __dirname,
-      documentUri: 'file://' + __dirname,
-      serverUri,
-      documentText: () => '',
+    beforeEach(() => {
+      // Fake response just includes the hover provider
+      mockSocket.send.onFirstCall().callsFake((str) => {
+        const data = JSON.stringify({
+          jsonrpc: '2.0',
+          id: 0,
+          result: {
+            capabilities: {
+              completionProvider: {
+                triggerCharacters: ['.'],
+                resolveProvider: false,
+              },
+            },
+          } as lsProtocol.InitializeResult,
+        });
+
+        mockSocket.dispatchEvent(new MessageEvent('message', { data }));
+      });
+
+      // 2. After receiving capabilities from the server, we will send a completion
+      mockSocket.send.onSecondCall().callsFake((str) => {
+        connection.getCompletion({
+          line: 1,
+          ch: 8,
+        }, {
+          start: {
+            line: 1,
+            ch: 8,
+          },
+          end: {
+            line: 1,
+            ch: 9,
+          },
+          text: '.',
+        });
+      });
+
     });
-    mockSocket = new MockSocket('ws://localhost:8080');
-  });
 
-  afterEach(() => {
-    sinon.restore();
+    it('emits a null completion event', (done) => {
+      // 3. Fake a server response for the hover
+      mockSocket.send.onThirdCall().callsFake((str) => {
+        const message = JSON.parse(str);
+
+        const data = JSON.stringify({
+          jsonrpc: '2.0',
+          id: message.id,
+          result: null,
+        });
+
+        mockSocket.dispatchEvent(new MessageEvent('message', { data }));
+      });
+
+      connection.connect(mockSocket);
+      mockSocket.dispatchEvent(new Event('open'));
+
+      connection.on('completion', (response) => {
+        expect(response).toBeNull();
+        done();
+      });
+    });
+
+    it('emits a completion event', (done) => {
+      completionResponse = {
+        isIncomplete: false,
+        items: [{
+          label: 'log',
+        }, {
+          label: 'info',
+        }],
+       } as lsProtocol.CompletionList;
+
+      // 3. Fake a server response for the hover
+      mockSocket.send.onThirdCall().callsFake((str) => {
+        const message = JSON.parse(str);
+
+        const data = JSON.stringify({
+          jsonrpc: '2.0',
+          id: message.id,
+          result: completionResponse,
+        });
+
+        mockSocket.dispatchEvent(new MessageEvent('message', { data }));
+      });
+
+      connection.connect(mockSocket);
+      mockSocket.dispatchEvent(new Event('open'));
+
+      connection.on('completion', (response) => {
+        expect(response).toEqual(completionResponse.items);
+        done();
+      });
+    });
   });
 
   it('closes the socket connection and stops sending messages', () => {
