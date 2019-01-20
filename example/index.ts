@@ -108,5 +108,5 @@ let cssAdapter = new CodeMirrorAdapter(cssConnection, {
 }, cssEditor);
 let jsConnection = new LspWsConnection(js).connect(new WebSocket(js.serverUri));
 let jsAdapter = new CodeMirrorAdapter(jsConnection, {
-  quickSuggestionsDelay: 100,
+  quickSuggestionsDelay: 50,
 }, jsEditor);

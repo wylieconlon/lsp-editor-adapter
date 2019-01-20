@@ -41,15 +41,38 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   public handleMouseOver(ev: MouseEvent) {
+    // Only handle mouseovers inside CodeMirror's bounding box
+    let isInsideSizer = false;
+    let target: HTMLElement = ev.target as HTMLElement;
+    while (target !== document.body) {
+      if (target.classList.contains('CodeMirror-sizer')) {
+        isInsideSizer = true;
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (!isInsideSizer) {
+      return;
+    }
+
     const docPosition: IPosition = this.editor.coordsChar({
       left: ev.clientX,
       top: ev.clientY,
     }, 'window');
 
+    const token = this.editor.getTokenAt(docPosition);
+    const hasToken = !!token.string.length;
+
+    if (!hasToken) {
+      return;
+    }
+
     if (
-      !this.hoverCharacter ||
-      (docPosition.line !== this.hoverCharacter.line && docPosition.ch !== this.hoverCharacter.ch)
+      !(this.hoverCharacter &&
+      docPosition.line === this.hoverCharacter.line && docPosition.ch === this.hoverCharacter.ch)
     ) {
+      // Avoid sending duplicate requests in a row
       this.hoverCharacter = docPosition;
       this.debouncedGetHover(docPosition);
     }
@@ -248,7 +271,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     document.querySelectorAll('.CodeMirror-hints').forEach((e) => e.remove());
     this.editor.off('change', this.editorListeners.change);
     this.editor.off('cursorActivity', this.editorListeners.cursorActivity);
-    this.editor.getWrapperElement().removeEventListener('mouseover', this.editorListeners.mouseover);
+    this.editor.getWrapperElement().removeEventListener('mousemove', this.editorListeners.mouseover);
     Object.keys(this.connectionListeners).forEach((key) => {
       this.connection.off(key as any, this.connectionListeners[key]);
     });
@@ -273,7 +296,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     });
 
     const mouseOverListener = this.handleMouseOver.bind(this);
-    this.editor.getWrapperElement().addEventListener('mouseover', mouseOverListener);
+    this.editor.getWrapperElement().addEventListener('mousemove', mouseOverListener);
     this.editorListeners.mouseover = mouseOverListener;
 
     const debouncedCursor = debounce(() => {
