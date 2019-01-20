@@ -21,6 +21,7 @@ type ExtendedClientCapabilities = lsProtocol.ClientCapabilities & IFilesServerCl
 
 class LspWsConnection extends events.EventEmitter implements ILspConnection {
   private isConnected = false;
+  private isInitialized = false;
   private socket: WebSocket;
   private documentInfo: ILspOptions;
   private serverCapabilities: lsProtocol.ServerCapabilities;
@@ -133,6 +134,7 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
     };
 
     this.connection.sendRequest('initialize', message).then((params: lsProtocol.InitializeResult) => {
+      this.isInitialized = true;
       this.serverCapabilities = params.capabilities as ServerCapabilities;
       const textDocumentMessage: lsProtocol.DidOpenTextDocumentParams = {
         textDocument: {
@@ -170,7 +172,7 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
   }
 
   public getHoverTooltip(location: IPosition) {
-    if (!this.isConnected) {
+    if (!this.isInitialized) {
       return;
     }
     this.connection.sendRequest('textDocument/hover', {

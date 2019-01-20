@@ -64,9 +64,11 @@ describe('CodeMirror adapter', () => {
       };
       const screenPos = editor.charCoords(pos, 'window');
 
-      editor.getWrapperElement().dispatchEvent(new MouseEvent('mouseover', {
+      const target = editor.getWrapperElement().querySelector('.CodeMirror-line');
+      target.dispatchEvent(new MouseEvent('mousemove', {
         clientX: screenPos.left,
         clientY: screenPos.top,
+        bubbles: true,
       }));
 
       clock.tick(10);
@@ -76,6 +78,50 @@ describe('CodeMirror adapter', () => {
         line: 0,
         ch: 3,
       })).toEqual(true);
+    });
+
+    it('should request another hover within the same line', () => {
+      const pos = {
+        line: 0,
+        ch: 3,
+      };
+      const screenPos = editor.charCoords(pos, 'window');
+
+      const target = editor.getWrapperElement().querySelector('.CodeMirror-line');
+      target.dispatchEvent(new MouseEvent('mousemove', {
+        clientX: screenPos.left,
+        clientY: screenPos.top,
+        bubbles: true,
+      }));
+
+      clock.tick(10);
+
+      target.dispatchEvent(new MouseEvent('mousemove', {
+        clientX: screenPos.left + 20,
+        clientY: screenPos.top,
+        bubbles: true,
+      }));
+
+      clock.tick(10);
+
+      expect(connection.getHoverTooltip.callCount).toEqual(2);
+      expect(connection.getHoverTooltip.secondCall.calledWithMatch({
+        line: 0,
+        ch: 6,
+      })).toEqual(true);
+    });
+
+    it('should not request hover when hover is outside visible code area', () => {
+      // This should be way outside the valid area
+      editor.getWrapperElement().dispatchEvent(new MouseEvent('mousemove', {
+        clientX: 500,
+        clientY: 500,
+        bubbles: true,
+      }));
+
+      clock.tick(10);
+
+      expect(connection.getHoverTooltip.callCount).toEqual(0);
     });
 
     it('should display a marker on hover response', () => {
