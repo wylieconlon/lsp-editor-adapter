@@ -146,6 +146,33 @@ describe('CodeMirror adapter', () => {
       expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(1);
     });
 
+    it('should handle hover responses without ranges', () => {
+      const pos = {
+        line: 0,
+        ch: 3,
+      };
+      const screenPos = editor.charCoords(pos, 'window');
+
+      const target = editor.getWrapperElement().querySelector('.CodeMirror-line');
+      target.dispatchEvent(new MouseEvent('mousemove', {
+        clientX: screenPos.left,
+        clientY: screenPos.top,
+        bubbles: true,
+      }));
+
+      clock.tick(10);
+
+      connection.dispatchEvent(new MessageEvent('hover', {
+        data: {
+          contents: ['hello'],
+        },
+      }));
+
+      expect(editor.getDoc().getAllMarks().length).toEqual(0);
+
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(1);
+    });
+
     it('should clear the hover if the server returns no results', () => {
       connection.dispatchEvent(new MessageEvent('hover', {
         data: {
