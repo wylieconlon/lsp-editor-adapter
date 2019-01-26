@@ -402,4 +402,38 @@ describe('CodeMirror adapter', () => {
       expect(editor.getDoc().getAllMarks().length).toEqual(1);
     });
   });
+
+  describe('right click menu', () => {
+    let connection: MockConnection;
+
+    beforeEach(() => {
+      connection = new MockConnection();
+
+      // tslint:disable no-unused-expression
+      adapter = new CodeMirrorAdapter(connection, {
+        quickSuggestionsDelay: 10,
+      }, editor);
+
+      editor.getDoc().replaceSelection('hello world');
+    });
+
+    it('should display a context menu on right click', () => {
+      const pos = {
+        line: 0,
+        ch: 3,
+      };
+      const screenPos = editor.charCoords(pos, 'window');
+
+      const target = editor.getWrapperElement().querySelector('.CodeMirror-line');
+      target.dispatchEvent(new MouseEvent('contextmenu', {
+        clientX: screenPos.left,
+        clientY: screenPos.top,
+        bubbles: true,
+      }));
+
+      clock.tick(defaults.debounceSuggestionsWhileTyping);
+
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(1);
+    });
+  });
 });

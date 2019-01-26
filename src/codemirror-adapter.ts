@@ -41,18 +41,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   public handleMouseOver(ev: MouseEvent) {
-    // Only handle mouseovers inside CodeMirror's bounding box
-    let isInsideSizer = false;
-    let target: HTMLElement = ev.target as HTMLElement;
-    while (target !== document.body) {
-      if (target.classList.contains('CodeMirror-sizer')) {
-        isInsideSizer = true;
-        break;
-      }
-      target = target.parentElement;
-    }
-
-    if (!isInsideSizer) {
+    if (!this._isEventInsideVisible(ev) || !this._isEventOnCharacter(ev)) {
       return;
     }
 
@@ -60,13 +49,6 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
       left: ev.clientX,
       top: ev.clientY,
     }, 'window');
-
-    const token = this.editor.getTokenAt(docPosition);
-    const hasToken = !!token.string.length;
-
-    if (!hasToken) {
-      return;
-    }
 
     if (
       !(this.hoverCharacter &&
@@ -275,7 +257,9 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     document.querySelectorAll('.CodeMirror-hints').forEach((e) => e.remove());
     this.editor.off('change', this.editorListeners.change);
     this.editor.off('cursorActivity', this.editorListeners.cursorActivity);
+    this.editor.off('cursorActivity', this.editorListeners.cursorActivity);
     this.editor.getWrapperElement().removeEventListener('mousemove', this.editorListeners.mouseover);
+    this.editor.getWrapperElement().removeEventListener('contextmenu', this.editorListeners.contextmenu);
     Object.keys(this.connectionListeners).forEach((key) => {
       this.connection.off(key as any, this.connectionListeners[key]);
     });
@@ -306,6 +290,10 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     const debouncedCursor = debounce(() => {
       this.connection.getDocumentHighlights(this.editor.getDoc().getCursor('start'));
     }, this.options.quickSuggestionsDelay);
+
+    const rightClickHandler = this._handleRightClick.bind(this);
+    this.editor.getWrapperElement().addEventListener('contextmenu', rightClickHandler);
+    this.editorListeners.contextmenu = rightClickHandler;
 
     this.editor.on('cursorActivity', debouncedCursor);
     this.editorListeners.cursorActivity = debouncedCursor;
@@ -363,6 +351,54 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
       const inA = (a.label.indexOf(triggerWord) === 0) ? -1 : 1;
       const inB = b.label.indexOf(triggerWord) === 0 ? 1 : -1;
       return inA + inB;
+    });
+  }
+
+  private _isEventInsideVisible(ev: MouseEvent) {
+    // Only handle mouseovers inside CodeMirror's bounding box
+    let isInsideSizer = false;
+    let target: HTMLElement = ev.target as HTMLElement;
+    while (target !== document.body) {
+      if (target.classList.contains('CodeMirror-sizer')) {
+        isInsideSizer = true;
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    return isInsideSizer;
+  }
+
+  private _isEventOnCharacter(ev: MouseEvent) {
+    const docPosition: IPosition = this.editor.coordsChar({
+      left: ev.clientX,
+      top: ev.clientY,
+    }, 'window');
+
+    const token = this.editor.getTokenAt(docPosition);
+    const hasToken = !!token.string.length;
+
+    return hasToken;
+  }
+
+  private _handleRightClick(ev: MouseEvent) {
+    if (!this._isEventInsideVisible(ev) || !this._isEventOnCharacter(ev)) {
+      return;
+    }
+
+    ev.preventDefault();
+
+    const docPosition: IPosition = this.editor.coordsChar({
+      left: ev.clientX,
+      top: ev.clientY,
+    }, 'window');
+
+    const htmlElement = document.createElement('div');
+    htmlElement.innerText = 'Right click menu';
+    const coords = this.editor.charCoords(docPosition, 'page');
+    this._showTooltip(htmlElement, {
+      x: coords.left,
+      y: coords.bottom + this.editor.defaultTextHeight(),
     });
   }
 
