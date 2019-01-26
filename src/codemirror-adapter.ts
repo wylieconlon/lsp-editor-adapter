@@ -125,14 +125,22 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
       return;
     }
 
-    const start = {
-      line: response.range.start.line,
-      ch: response.range.start.character,
-    } as CodeMirror.Position;
-    const end = {
-      line: response.range.end.line,
-      ch: response.range.end.character,
-    } as CodeMirror.Position;
+    let start = this.hoverCharacter;
+    let end = this.hoverCharacter;
+    if (response.range) {
+      start = {
+        line: response.range.start.line,
+        ch: response.range.start.character,
+      } as CodeMirror.Position;
+      end = {
+        line: response.range.end.line,
+        ch: response.range.end.character,
+      } as CodeMirror.Position;
+
+      this.hoverMarker = this.editor.getDoc().markText(start, end, {
+        css: 'text-decoration: underline',
+      });
+    }
 
     let tooltipText;
     if (MarkupContent.is(response.contents)) {
@@ -149,10 +157,6 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     } else if (typeof response.contents === 'string') {
       tooltipText = response.contents;
     }
-
-    this.hoverMarker = this.editor.getDoc().markText(start, end, {
-      css: 'text-decoration: underline',
-    });
 
     const htmlElement = document.createElement('div');
     htmlElement.innerText = tooltipText;
