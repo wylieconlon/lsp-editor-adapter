@@ -27,9 +27,11 @@ please submit a pull request!
 These screenshots show the current state of the library:
 
 Javascript/Typescript:
+
 <img width="533" alt="screenshot 2019-01-21 01 03 47" src="https://user-images.githubusercontent.com/666475/51455610-6dcbbc80-1d18-11e9-8b8a-e7d757ca1440.png">
 
 Swift:
+
 <img width="459" alt="screenshot 2019-01-26 17 08 32" src="https://user-images.githubusercontent.com/666475/51793344-0d5fd380-218d-11e9-99bc-0e06e1f51c89.png">
 <img width="580" alt="screenshot 2019-01-27 13 47 23" src="https://user-images.githubusercontent.com/666475/51805363-4c982e00-223a-11e9-97be-876fd1b49371.png">
 <img width="581" alt="screenshot 2019-01-27 13 47 36" src="https://user-images.githubusercontent.com/666475/51805364-4c982e00-223a-11e9-9e4e-cd7f9ca05ff9.png">
