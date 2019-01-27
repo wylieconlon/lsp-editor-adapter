@@ -1,4 +1,5 @@
 import * as lsProtocol from 'vscode-languageserver-protocol';
+import { Location, LocationLink } from 'vscode-languageserver-protocol';
 
 export interface IPosition {
   line: number;
@@ -12,7 +13,7 @@ export interface ITokenInfo {
 }
 
 type ConnectionEvent = 'completion' | 'completionResolved' | 'hover' | 'diagnostic' | 'highlight' |
-  'signature' | 'error' | 'logging';
+  'signature' | 'goTo' | 'error' | 'logging';
 
 export interface ILspConnection {
   on(event: 'completion', callback: (items: lsProtocol.CompletionItem[]) => void): void;
@@ -21,6 +22,7 @@ export interface ILspConnection {
   on(event: 'diagnostic', callback: (diagnostic: lsProtocol.PublishDiagnosticsParams) => void): void;
   on(event: 'highlight', callback: (highlights: lsProtocol.DocumentHighlight[]) => void): void;
   on(event: 'signature', callback: (signatures: lsProtocol.SignatureHelp) => void): void;
+  on(event: 'goTo', callback: (location: Location | Location[] | LocationLink[] | null) => void): void;
   on(event: 'error', callback: (error: any) => void): void;
   on(event: 'logging', callback: (log: any) => void): void;
 
@@ -65,6 +67,26 @@ export interface ILspConnection {
    * Request all matching symbols in the document scope
    */
   getDocumentHighlights(position: IPosition): void;
+  /**
+   * Request a link to the definition of the current symbol. The results will not be displayed
+   * unless they are within the same file URI
+   */
+  getDefinition(position: IPosition): void;
+  /**
+   * Request a link to the type definition of the current symbol. The results will not be displayed
+   * unless they are within the same file URI
+   */
+  getTypeDefinition(position: IPosition): void;
+  /**
+   * Request a link to the implementation of the current symbol. The results will not be displayed
+   * unless they are within the same file URI
+   */
+  getImplementation(position: IPosition): void;
+  /**
+   * Request a link to all references to the current symbol. The results will not be displayed
+   * unless they are within the same file URI
+   */
+  getReferences(position: IPosition): void;
 
   // TODO:
   // Workspaces: Not in scope
@@ -74,10 +96,6 @@ export interface ILspConnection {
   // didSave
   // didClose
   // Language features:
-  // goToDefinition
-  // goToTypeDefinition
-  // goToImplementation
-  // findReferences
   // getDocumentSymbols
   // codeAction
   // codeLens
@@ -95,6 +113,25 @@ export interface ILspConnection {
 
   getLanguageCompletionCharacters(): string[];
   getLanguageSignatureCharacters(): string[];
+
+  getDocumentUri(): string;
+
+  /**
+   * Does the server support go to definition?
+   */
+  isDefinitionSupported(): boolean;
+  /**
+   * Does the server support go to type definition?
+   */
+  isTypeDefinitionSupported(): boolean;
+  /**
+   * Does the server support go to implementation?
+   */
+  isImplementationSupported(): boolean;
+  /**
+   * Does the server support find all references?
+   */
+  isReferencesSupported(): boolean;
 }
 
 /**

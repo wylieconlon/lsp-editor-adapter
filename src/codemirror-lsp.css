@@ -17,3 +17,17 @@
   padding: 2px;
   z-index: 2;
 }
+
+.CodeMirror-lsp-context > * {
+  padding: 5px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.CodeMirror-lsp-context > *:last-child {
+  border-bottom: none;
+}
+
+.CodeMirror-lsp-context *:hover {
+  background-color: #dde;
+}

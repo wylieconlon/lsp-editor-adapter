@@ -28,6 +28,15 @@ export class MockConnection implements ILspConnection {
   public getDetailedCompletion = sinon.stub();
   public getSignatureHelp = sinon.stub();
   public getDocumentHighlights = sinon.stub();
+  public getDefinition = sinon.stub();
+  public getTypeDefinition = sinon.stub();
+  public getImplementation = sinon.stub();
+  public getReferences = sinon.stub();
+  public getDocumentUri = sinon.stub();
+  public isDefinitionSupported = sinon.stub();
+  public isTypeDefinitionSupported = sinon.stub();
+  public isImplementationSupported = sinon.stub();
+  public isReferencesSupported = sinon.stub();
   public close = sinon.stub();
 
   constructor() {}

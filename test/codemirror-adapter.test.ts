@@ -402,4 +402,110 @@ describe('CodeMirror adapter', () => {
       expect(editor.getDoc().getAllMarks().length).toEqual(1);
     });
   });
+
+  describe('right click menu', () => {
+    let connection: MockConnection;
+
+    beforeEach(() => {
+      connection = new MockConnection();
+
+      connection.isDefinitionSupported.returns(true);
+      connection.isTypeDefinitionSupported.returns(false);
+      connection.isReferencesSupported.returns(true);
+
+      // tslint:disable no-unused-expression
+      adapter = new CodeMirrorAdapter(connection, {
+        quickSuggestionsDelay: 10,
+      }, editor);
+
+      editor.getDoc().replaceSelection('hello world');
+
+      // Open the menu for each of these tests
+      const pos = {
+        line: 0,
+        ch: 3,
+      };
+      const screenPos = editor.charCoords(pos, 'window');
+
+      const target = editor.getWrapperElement().querySelector('.CodeMirror-line');
+      target.dispatchEvent(new MouseEvent('contextmenu', {
+        clientX: screenPos.left,
+        clientY: screenPos.top,
+        bubbles: true,
+      }));
+
+      clock.tick(defaults.debounceSuggestionsWhileTyping);
+    });
+
+    it('should display a context menu on right click', () => {
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(1);
+    });
+
+    it('should close the context menu on click outside', () => {
+      editor.getWrapperElement().dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+      }));
+
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(0);
+    });
+
+    it('should send a request to get definitions for the current line', () => {
+      const goToDefinition = document.querySelector('.CodeMirror-lsp-context > div');
+
+      goToDefinition.dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+      }));
+
+      expect(goToDefinition.textContent).toEqual('Go to Definition');
+      expect(connection.getDefinition.callCount).toEqual(1);
+      expect(connection.getDefinition.firstCall.calledWithMatch({
+        line: 0,
+        ch: 3,
+      })).toEqual(true);
+    });
+
+    it('should only display context menu items that the server supports', () => {
+      const options = document.querySelectorAll('.CodeMirror-lsp-context > div');
+
+      expect(options.length).toEqual(2);
+    });
+
+    it('should close the context menu and display highlights on a go to X response', () => {
+      const uri = 'file:///path/to/file.css';
+
+      connection.getDocumentUri.returns(uri);
+
+      connection.dispatchEvent(new MessageEvent('goTo', {
+        data: [{
+          uri,
+          range: {
+            start: {
+              line: 0,
+              character: 0,
+            },
+            end: {
+              line: 0,
+              character: 2,
+            },
+          },
+        }, {
+          uri: 'different file',
+          range: {
+            start: {
+              line: 5,
+              character: 0,
+            },
+            end: {
+              line: 6,
+              character: 5,
+            },
+          },
+        }],
+      }));
+
+      expect(editor.getDoc().getAllMarks().length).toEqual(1);
+
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(0);
+    });
+  });
 });
