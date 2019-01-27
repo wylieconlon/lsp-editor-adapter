@@ -3,7 +3,7 @@
 
 import debounce from 'lodash-es/debounce';
 import * as lsProtocol from 'vscode-languageserver-protocol';
-import { MarkupContent } from 'vscode-languageserver-protocol';
+import { Location, LocationLink, MarkupContent } from 'vscode-languageserver-protocol';
 import { getFilledDefaults, IEditorAdapter, ILspConnection, IPosition, ITextEditorOptions, ITokenInfo } from './types';
 
 interface IScreenCoord {
@@ -25,7 +25,9 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   private debouncedGetHover: (position: IPosition) => void;
   private connectionListeners: { [key: string]: () => void } = {};
   private editorListeners: { [key: string]: () => void } = {};
+  private documentListeners: { [key: string]: () => void } = {};
   private tooltip: HTMLElement;
+  private isShowingContextMenu: boolean = false;
 
   constructor(connection: ILspConnection, options: ITextEditorOptions, editor: CodeMirror.Editor) {
     super(connection, options, editor);
@@ -41,7 +43,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   public handleMouseOver(ev: MouseEvent) {
-    if (!this._isEventInsideVisible(ev) || !this._isEventOnCharacter(ev)) {
+    if (this.isShowingContextMenu || !this._isEventInsideVisible(ev) || !this._isEventOnCharacter(ev)) {
       return;
     }
 
@@ -150,30 +152,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   public handleHighlight(items: lsProtocol.DocumentHighlight[]) {
-    if (this.highlightMarkers) {
-      this.highlightMarkers.forEach((marker) => {
-        marker.clear();
-      });
-    }
-    this.highlightMarkers = [];
-    if (!items.length) {
-      return;
-    }
-
-    items.forEach((highlight) => {
-      const start = {
-        line: highlight.range.start.line,
-        ch: highlight.range.start.character,
-      } as CodeMirror.Position;
-      const end = {
-        line: highlight.range.end.line,
-        ch: highlight.range.end.character,
-      } as CodeMirror.Position;
-
-      this.highlightMarkers.push(this.editor.getDoc().markText(start, end, {
-        css: 'background-color: #dde',
-      }));
-    });
+    this._highlightRanges(items.map((i) => i.range));
   }
 
   public handleCompletion(completions: lsProtocol.CompletionItem[]): void {
@@ -249,6 +228,44 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     });
   }
 
+  public handleGoTo(location: Location | Location[] | LocationLink[] | null) {
+    this._removeTooltip();
+
+    if (!location) {
+      return;
+    }
+
+    const documentUri = this.connection.getDocumentUri();
+    let scrollTo: IPosition;
+
+    if (lsProtocol.Location.is(location)) {
+      if (location.uri !== documentUri) {
+        return;
+      }
+      this._highlightRanges([location.range]);
+      scrollTo = {
+        line: location.range.start.line,
+        ch: location.range.start.character,
+      };
+    } else if ((location as any[]).every((l) => lsProtocol.Location.is(l))) {
+      const locations = (location as Location[]).filter((l) => l.uri === documentUri);
+
+      this._highlightRanges(locations.map((l) => l.range));
+      scrollTo = {
+        line: locations[0].range.start.line,
+        ch: locations[0].range.start.character,
+      };
+    } else if ((location as any[]).every((l) => lsProtocol.LocationLink.is(l))) {
+      const locations = (location as LocationLink[]).filter((l) => l.targetUri === documentUri);
+      this._highlightRanges(locations.map((l) => l.targetRange));
+      scrollTo = {
+        line: locations[0].targetRange.start.line,
+        ch: locations[0].targetRange.start.character,
+      };
+    }
+    this.editor.scrollIntoView(scrollTo);
+  }
+
   public remove() {
     this._removeSignatureWidget();
     this._removeHover();
@@ -262,6 +279,9 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     this.editor.getWrapperElement().removeEventListener('contextmenu', this.editorListeners.contextmenu);
     Object.keys(this.connectionListeners).forEach((key) => {
       this.connection.off(key as any, this.connectionListeners[key]);
+    });
+    Object.keys(this.documentListeners).forEach((key) => {
+      document.removeEventListener(key as any, this.documentListeners[key]);
     });
   }
 
@@ -277,6 +297,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
       completion: this.handleCompletion.bind(self),
       signature: this.handleSignature.bind(self),
       diagnostic: this.handleDiagnostic.bind(self),
+      goTo: this.handleGoTo.bind(self),
     };
 
     Object.keys(this.connectionListeners).forEach((key) => {
@@ -297,6 +318,10 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
     this.editor.on('cursorActivity', debouncedCursor);
     this.editorListeners.cursorActivity = debouncedCursor;
+
+    const clickOutsideListener = this._handleClickOutside.bind(this);
+    document.addEventListener('click', clickOutsideListener);
+    this.documentListeners.clickOutside = clickOutsideListener;
   }
 
   private _getTokenEndingAtPosition(code: string, location: IPosition, splitCharacters: string[]): ITokenInfo {
@@ -386,6 +411,15 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
       return;
     }
 
+    if (
+      !this.connection.isDefinitionSupported() &&
+      !this.connection.isTypeDefinitionSupported() &&
+      !this.connection.isReferencesSupported() &&
+      !this.connection.isImplementationSupported()
+    ) {
+      return;
+    }
+
     ev.preventDefault();
 
     const docPosition: IPosition = this.editor.coordsChar({
@@ -394,15 +428,70 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
     }, 'window');
 
     const htmlElement = document.createElement('div');
-    htmlElement.innerText = 'Right click menu';
+    htmlElement.classList.add('CodeMirror-lsp-context');
+
+    if (this.connection.isDefinitionSupported()) {
+      const goToDefinition = document.createElement('div');
+      goToDefinition.innerText = 'Go to Definition';
+      goToDefinition.addEventListener('click', () => {
+        this.connection.getDefinition(docPosition);
+      });
+      htmlElement.appendChild(goToDefinition);
+    }
+
+    if (this.connection.isTypeDefinitionSupported()) {
+      const goToTypeDefinition = document.createElement('div');
+      goToTypeDefinition.innerText = 'Go to Type Definition';
+      goToTypeDefinition.addEventListener('click', () => {
+        this.connection.getTypeDefinition(docPosition);
+      });
+      htmlElement.appendChild(goToTypeDefinition);
+    }
+
+    if (this.connection.isReferencesSupported()) {
+      const getReferences = document.createElement('div');
+      getReferences.innerText = 'Find all References';
+      getReferences.addEventListener('click', () => {
+        this.connection.getReferences(docPosition);
+      });
+      htmlElement.appendChild(getReferences);
+    }
+
     const coords = this.editor.charCoords(docPosition, 'page');
     this._showTooltip(htmlElement, {
       x: coords.left,
       y: coords.bottom + this.editor.defaultTextHeight(),
     });
+
+    this.isShowingContextMenu = true;
+  }
+
+  private _handleClickOutside(ev: MouseEvent) {
+    if (this.isShowingContextMenu) {
+      let target: HTMLElement = ev.target as HTMLElement;
+      let isInside = false;
+      while (target !== document.body) {
+        if (target.classList.contains('CodeMirror-lsp-tooltip')) {
+          isInside = true;
+          break;
+        }
+        target = target.parentElement;
+      }
+
+      if (isInside) {
+        return;
+      }
+
+      // Only remove tooltip if clicked outside right click
+      this._removeTooltip();
+    }
   }
 
   private _showTooltip(el: HTMLElement, coords: IScreenCoord) {
+    if (this.isShowingContextMenu) {
+      return;
+    }
+
     this._removeTooltip();
 
     let top = coords.y - this.editor.defaultTextHeight();
@@ -426,6 +515,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
 
   private _removeTooltip() {
     if (this.tooltip) {
+      this.isShowingContextMenu = false;
       this.tooltip.remove();
     }
   }
@@ -445,6 +535,33 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
       this.hoverMarker.clear();
       this.hoverMarker = null;
     }
+  }
+
+  private _highlightRanges(items: lsProtocol.Range[]) {
+    if (this.highlightMarkers) {
+      this.highlightMarkers.forEach((marker) => {
+        marker.clear();
+      });
+    }
+    this.highlightMarkers = [];
+    if (!items.length) {
+      return;
+    }
+
+    items.forEach((item) => {
+      const start = {
+        line: item.start.line,
+        ch: item.start.character,
+      } as CodeMirror.Position;
+      const end = {
+        line: item.end.line,
+        ch: item.end.character,
+      } as CodeMirror.Position;
+
+      this.highlightMarkers.push(this.editor.getDoc().markText(start, end, {
+        css: 'background-color: #dde',
+      }));
+    });
   }
 }
 

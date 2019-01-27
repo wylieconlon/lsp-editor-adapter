@@ -2,7 +2,7 @@ import * as rpc from '@sourcegraph/vscode-ws-jsonrpc';
 import { ConsoleLogger } from '@sourcegraph/vscode-ws-jsonrpc';
 import * as events from 'events';
 import * as lsProtocol from 'vscode-languageserver-protocol';
-import { ServerCapabilities } from 'vscode-languageserver-protocol';
+import { LocationLink, ServerCapabilities } from 'vscode-languageserver-protocol';
 import { ILspConnection, ILspOptions, IPosition, ITokenInfo } from './types';
 
 interface IFilesServerClientCapabilities {
@@ -83,6 +83,10 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
     this.socket.close();
   }
 
+  public getDocumentUri() {
+    return this.documentInfo.documentUri;
+  }
+
   public sendInitialize() {
     if (!this.isConnected) {
       return;
@@ -117,6 +121,22 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
             signatureInformation: {
               documentationFormat: ['plaintext', 'markdown'],
             },
+          },
+          declaration: {
+            dynamicRegistration: true,
+            linkSupport: true,
+          },
+          definition: {
+            dynamicRegistration: true,
+            linkSupport: true,
+          },
+          typeDefinition: {
+            dynamicRegistration: true,
+            linkSupport: true,
+          },
+          implementation: {
+            dynamicRegistration: true,
+            linkSupport: true,
           },
         } as ExtendedClientCapabilities,
         workspace: {
@@ -286,6 +306,94 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
   }
 
   /**
+   * Request a link to the definition of the current symbol. The results will not be displayed
+   * unless they are within the same file URI
+   */
+  public getDefinition(location: IPosition) {
+    if (!this.isConnected || !this.isDefinitionSupported()) {
+      return;
+    }
+
+    this.connection.sendRequest('textDocument/definition', {
+      textDocument: {
+        uri: this.documentInfo.documentUri,
+      },
+      position: {
+        line: location.line,
+        character: location.ch,
+      },
+    } as lsProtocol.TextDocumentPositionParams).then((result: Location | Location[] | LocationLink[] | null) => {
+      this.emit('goTo', result);
+    });
+  }
+
+  /**
+   * Request a link to the type definition of the current symbol. The results will not be displayed
+   * unless they are within the same file URI
+   */
+  public getTypeDefinition(location: IPosition) {
+    if (!this.isConnected || !this.isTypeDefinitionSupported()) {
+      return;
+    }
+
+    this.connection.sendRequest('textDocument/typeDefinition', {
+      textDocument: {
+        uri: this.documentInfo.documentUri,
+      },
+      position: {
+        line: location.line,
+        character: location.ch,
+      },
+    } as lsProtocol.TextDocumentPositionParams).then((result: Location | Location[] | LocationLink[] | null) => {
+      this.emit('goTo', result);
+    });
+  }
+
+  /**
+   * Request a link to the implementation of the current symbol. The results will not be displayed
+   * unless they are within the same file URI
+   */
+  public getImplementation(location: IPosition) {
+    if (!this.isConnected || !this.isImplementationSupported()) {
+      return;
+    }
+
+    this.connection.sendRequest('textDocument/implementation', {
+      textDocument: {
+        uri: this.documentInfo.documentUri,
+      },
+      position: {
+        line: location.line,
+        character: location.ch,
+      },
+    } as lsProtocol.TextDocumentPositionParams).then((result: Location | Location[] | LocationLink[] | null) => {
+      this.emit('goTo', result);
+    });
+  }
+
+  /**
+   * Request a link to all references to the current symbol. The results will not be displayed
+   * unless they are within the same file URI
+   */
+  public getReferences(location: IPosition) {
+    if (!this.isConnected || !this.isReferencesSupported()) {
+      return;
+    }
+
+    this.connection.sendRequest('textDocument/references', {
+      textDocument: {
+        uri: this.documentInfo.documentUri,
+      },
+      position: {
+        line: location.line,
+        character: location.ch,
+      },
+    } as lsProtocol.ReferenceParams).then((result: Location[] | null) => {
+      this.emit('goTo', result);
+    });
+  }
+
+  /**
    * The characters that trigger completion automatically.
    */
   public getLanguageCompletionCharacters(): string[] {
@@ -309,6 +417,34 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
       return [];
     }
     return this.serverCapabilities.signatureHelpProvider.triggerCharacters;
+  }
+
+  /**
+   * Does the server support go to definition?
+   */
+  public isDefinitionSupported() {
+    return !!(this.serverCapabilities && this.serverCapabilities.definitionProvider);
+  }
+
+  /**
+   * Does the server support go to type definition?
+   */
+  public isTypeDefinitionSupported() {
+    return !!(this.serverCapabilities && this.serverCapabilities.typeDefinitionProvider);
+  }
+
+  /**
+   * Does the server support go to implementation?
+   */
+  public isImplementationSupported() {
+    return !!(this.serverCapabilities && this.serverCapabilities.implementationProvider);
+  }
+
+  /**
+   * Does the server support find all references?
+   */
+  public isReferencesSupported() {
+    return !!(this.serverCapabilities && this.serverCapabilities.referencesProvider);
   }
 }
 

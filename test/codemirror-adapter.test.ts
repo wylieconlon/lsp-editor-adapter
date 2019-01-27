@@ -409,6 +409,8 @@ describe('CodeMirror adapter', () => {
     beforeEach(() => {
       connection = new MockConnection();
 
+      connection.isDefinitionSupported.returns(true);
+
       // tslint:disable no-unused-expression
       adapter = new CodeMirrorAdapter(connection, {
         quickSuggestionsDelay: 10,
@@ -434,6 +436,27 @@ describe('CodeMirror adapter', () => {
       clock.tick(defaults.debounceSuggestionsWhileTyping);
 
       expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(1);
+    });
+
+    it('should close the context menu on click outside', () => {
+      const pos = {
+        line: 0,
+        ch: 3,
+      };
+      const screenPos = editor.charCoords(pos, 'window');
+
+      const target = editor.getWrapperElement().querySelector('.CodeMirror-line');
+      target.dispatchEvent(new MouseEvent('contextmenu', {
+        clientX: screenPos.left,
+        clientY: screenPos.top,
+        bubbles: true,
+      }));
+
+      editor.getWrapperElement().dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+      }));
+
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(0);
     });
   });
 });
