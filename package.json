@@ -1,6 +1,6 @@
 {
   "name": "lsp-editor-adapter",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Make your CodeMirror editor smarter by connecting to a language server",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -43,7 +43,7 @@
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.12.18",
     "@types/sinon": "^5.0.7",
-    "codemirror": "^5.42.2",
+    "codemirror": "^5.43.0",
     "css-loader": "^1.0.1",
     "expect": "^23.6.0",
     "karma": "^3.1.4",
