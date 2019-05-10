@@ -205,6 +205,70 @@ describe('CodeMirror adapter', () => {
     });
   });
 
+  describe('token highlights', () => {
+    const highlightMessageData = {
+      data: [
+        {
+          range: {
+            start: {
+              line: 0,
+              character: 0,
+            },
+            end: {
+              line: 0,
+              character: 5,
+            },
+          },
+        },
+        {
+          range: {
+            start: {
+              line: 0,
+              character: 12,
+            },
+            end: {
+              line: 0,
+              character: 17,
+            },
+          },
+        },
+      ],
+    };
+
+    let connection: MockConnection;
+
+    beforeEach(() => {
+      connection = new MockConnection();
+
+      // tslint:disable no-unused-expression
+      adapter = new CodeMirrorAdapter(connection, {}, editor);
+
+      editor.getDoc().replaceSelection('hello world hello there');
+    });
+
+    it('should highlight matching tokens', () => {
+      connection.dispatchEvent(new MessageEvent('highlight', highlightMessageData));
+
+      const highlightedElements = document.querySelectorAll('[style*="background-color:"]');
+
+      expect(highlightedElements.length).toEqual(2);
+      expect(highlightedElements[0].textContent).toEqual('hello');
+      expect(highlightedElements[1].textContent).toEqual('hello');
+    });
+
+    it('should accept null highlight and remove highlights', () => {
+      let highlightedElements;
+
+      connection.dispatchEvent(new MessageEvent('highlight', highlightMessageData));
+      highlightedElements = document.querySelectorAll('[style*="background-color:"]');
+      expect(highlightedElements.length).toEqual(2);
+
+      connection.dispatchEvent(new MessageEvent('highlight', {data: null}));
+      highlightedElements = document.querySelectorAll('[style*="background-color:"]');
+      expect(highlightedElements.length).toEqual(0);
+    });
+  });
+
   describe('autocompletion', () => {
     let connection: MockConnection;
 
