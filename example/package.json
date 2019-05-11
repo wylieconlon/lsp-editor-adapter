@@ -7,22 +7,22 @@
   },
   "license": "ISC",
   "dependencies": {
-    "codemirror": "^5.43.0",
+    "codemirror": "^5.46.0",
     "express": "^4.16.4",
-    "javascript-typescript-langserver": "^2.11.2",
+    "javascript-typescript-langserver": "^2.11.3",
     "jsonrpc-ws-proxy": "~0.0.5",
     "vscode-css-languageserver-bin": "^1.4.0",
     "vscode-html-languageserver-bin": "^1.4.0"
   },
   "devDependencies": {
     "@types/express": "^4.16.1",
-    "@types/webpack": "^4.4.24",
+    "@types/webpack": "^4.4.31",
     "concurrently": "^4.1.0",
-    "css-loader": "^1.0.1",
+    "css-loader": "^2.1.1",
     "rimraf": "^2.6.3",
     "style-loader": "^0.23.1",
-    "ts-loader": "^5.3.3",
-    "webpack": "^4.29.0",
-    "webpack-cli": "^3.2.1"
+    "ts-loader": "^6.0.0",
+    "webpack": "^4.31.0",
+    "webpack-cli": "^3.3.2"
   }
 }
