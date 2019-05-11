@@ -152,7 +152,7 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
   }
 
   public handleHighlight(items: lsProtocol.DocumentHighlight[]) {
-    this._highlightRanges(items.map((i) => i.range));
+    this._highlightRanges((items || []).map((i) => i.range));
   }
 
   public handleCompletion(completions: lsProtocol.CompletionItem[]): void {

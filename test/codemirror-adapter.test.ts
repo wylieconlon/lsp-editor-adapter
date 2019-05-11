@@ -205,6 +205,61 @@ describe('CodeMirror adapter', () => {
     });
   });
 
+  describe('token highlights', () => {
+    const highlightMessageData = {
+      data: [
+        {
+          range: {
+            start: {
+              line: 0,
+              character: 0,
+            },
+            end: {
+              line: 0,
+              character: 5,
+            },
+          },
+        },
+        {
+          range: {
+            start: {
+              line: 0,
+              character: 12,
+            },
+            end: {
+              line: 0,
+              character: 17,
+            },
+          },
+        },
+      ],
+    };
+
+    let connection: MockConnection;
+
+    beforeEach(() => {
+      connection = new MockConnection();
+
+      adapter = new CodeMirrorAdapter(connection, {}, editor);
+
+      editor.getDoc().replaceSelection('hello world hello there');
+    });
+
+    it('should highlight matching tokens', () => {
+      connection.dispatchEvent(new MessageEvent('highlight', highlightMessageData));
+
+      expect(editor.getDoc().getAllMarks().length).toEqual(2);
+    });
+
+    it('should accept null highlight and remove highlights', () => {
+      connection.dispatchEvent(new MessageEvent('highlight', highlightMessageData));
+      expect(editor.getDoc().getAllMarks().length).toEqual(2);
+
+      connection.dispatchEvent(new MessageEvent('highlight', {data: null}));
+      expect(editor.getDoc().getAllMarks().length).toEqual(0);
+    });
+  });
+
   describe('autocompletion', () => {
     let connection: MockConnection;
 
