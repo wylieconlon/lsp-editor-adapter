@@ -168,6 +168,86 @@ describe('LspWsConnection', () => {
     expect(JSON.parse(mockSocket.send.firstCall.args[0]).method).toEqual('initialize');
   });
 
+  describe('register/unregister capability', () => {
+    beforeEach(() => {
+      mockSocket.send.onFirstCall().callsFake((str) => {
+        const data = JSON.stringify({
+          jsonrpc: '2.0',
+          id: 0,
+          result: {
+            capabilities: {
+              definitionProvider: true,
+            },
+          } as lsProtocol.InitializeResult,
+        });
+
+        mockSocket.dispatchEvent(new MessageEvent('message', { data }));
+      });
+    });
+
+    it('registers a new server capability', (done) => {
+      mockSocket.send.onSecondCall().callsFake(() => {
+        expect(connection.isDefinitionSupported()).toBe(true);
+        expect(connection.isImplementationSupported()).toBe(false);
+
+        const data = JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'client/registerCapability',
+          params: {
+            registrations: [
+              {
+                id: 'id',
+                method: 'textDocument/implementation',
+              } as lsProtocol.Registration,
+            ],
+          } as lsProtocol.RegistrationParams,
+        });
+
+        mockSocket.dispatchEvent(new MessageEvent('message', { data }));
+
+        setTimeout(() => {
+          expect(connection.isDefinitionSupported()).toBe(true);
+          expect(connection.isImplementationSupported()).toBe(true);
+          done();
+        }, 0);
+      });
+
+      connection.connect(mockSocket);
+      mockSocket.dispatchEvent(new Event('open'));
+    });
+
+    it('unregisters a server capability', (done) => {
+      mockSocket.send.onSecondCall().callsFake(() => {
+        expect(connection.isDefinitionSupported()).toBe(true);
+
+        const data = JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'client/unregisterCapability',
+          params: {
+            unregisterations: [
+              {
+                id: 'id',
+                method: 'textDocument/definition',
+              },
+            ],
+          } as lsProtocol.UnregistrationParams,
+        });
+
+        mockSocket.dispatchEvent(new MessageEvent('message', { data }));
+
+        setTimeout(() => {
+          expect(connection.isDefinitionSupported()).toBe(false);
+          done();
+        });
+      });
+
+      connection.connect(mockSocket);
+      mockSocket.dispatchEvent(new Event('open'));
+    });
+  });
+
   describe('hover', () => {
     let hoverResponse: lsProtocol.Hover;
 

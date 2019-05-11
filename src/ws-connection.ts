@@ -3,6 +3,7 @@ import { ConsoleLogger } from '@sourcegraph/vscode-ws-jsonrpc';
 import * as events from 'events';
 import * as lsProtocol from 'vscode-languageserver-protocol';
 import { LocationLink, ServerCapabilities } from 'vscode-languageserver-protocol';
+import { registerServerCapability, unregisterServerCapability } from './server-capability-registration';
 import { ILspConnection, ILspOptions, IPosition, ITokenInfo } from './types';
 
 interface IFilesServerClientCapabilities {
@@ -56,6 +57,22 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
         });
 
         this.connection.onNotification('window/showMessage', (params: lsProtocol.ShowMessageParams) => {
+          this.emit('logging', params);
+        });
+
+        this.connection.onRequest('client/registerCapability', (params: lsProtocol.RegistrationParams) => {
+          params.registrations.forEach((capabilityRegistration: lsProtocol.Registration) => {
+            this.serverCapabilities = registerServerCapability(this.serverCapabilities, capabilityRegistration);
+          });
+
+          this.emit('logging', params);
+        });
+
+        this.connection.onRequest('client/unregisterCapability', (params: lsProtocol.UnregistrationParams) => {
+          params.unregisterations.forEach((capabilityUnregistration: lsProtocol.Unregistration) => {
+            this.serverCapabilities = unregisterServerCapability(this.serverCapabilities, capabilityUnregistration);
+          });
+
           this.emit('logging', params);
         });
 
