@@ -250,8 +250,12 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
         triggerKind: triggerKind || lsProtocol.CompletionTriggerKind.Invoked,
         triggerCharacter,
       },
-    } as lsProtocol.CompletionParams).then((params: lsProtocol.CompletionList) => {
-      this.emit('completion', params ? params.items : null);
+    } as lsProtocol.CompletionParams).then((params: lsProtocol.CompletionList | lsProtocol.CompletionItem[] | null) => {
+      let result:any = params;
+      if (<lsProtocol.CompletionList>params && (<lsProtocol.CompletionList>params).items) {
+        result = (<lsProtocol.CompletionList>params).items;
+      }
+      this.emit('completion', result);
     });
   }
 
@@ -417,7 +421,7 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
     if (!this.isConnected) {
       return;
     }
-    if (!(this.serverCapabilities && this.serverCapabilities.completionProvider)) {
+    if (!(this.serverCapabilities && this.serverCapabilities.completionProvider && this.serverCapabilities.completionProvider.triggerCharacters)) {
       return [];
     }
     return this.serverCapabilities.completionProvider.triggerCharacters;
@@ -430,7 +434,7 @@ class LspWsConnection extends events.EventEmitter implements ILspConnection {
     if (!this.isConnected) {
       return;
     }
-    if (!(this.serverCapabilities && this.serverCapabilities.signatureHelpProvider)) {
+    if (!(this.serverCapabilities && this.serverCapabilities.signatureHelpProvider && this.serverCapabilities.signatureHelpProvider.triggerCharacters)) {
       return [];
     }
     return this.serverCapabilities.signatureHelpProvider.triggerCharacters;

@@ -133,6 +133,8 @@ class CodeMirrorAdapter extends IEditorAdapter<CodeMirror.Editor> {
       const firstItem = response.contents[0];
       if (MarkupContent.is(firstItem)) {
         tooltipText = firstItem.value;
+      } else if (firstItem === null) {
+        return;
       } else if (typeof firstItem === 'object') {
         tooltipText = firstItem.value;
       } else {
