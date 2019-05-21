@@ -403,7 +403,7 @@ describe('LspWsConnection', () => {
       });
     });
 
-    it('emits a completion event', (done) => {
+    it('emits a completion event using CompletionList', (done) => {
       completionResponse = {
         isIncomplete: false,
         items: [{
@@ -411,7 +411,7 @@ describe('LspWsConnection', () => {
         }, {
           label: 'info',
         }],
-       } as lsProtocol.CompletionList;
+      } as lsProtocol.CompletionList;
 
       // 3. Fake a server response for the hover
       mockSocket.send.onThirdCall().callsFake((str) => {
@@ -431,6 +431,35 @@ describe('LspWsConnection', () => {
 
       connection.on('completion', (response) => {
         expect(response).toEqual(completionResponse.items);
+        done();
+      });
+    });
+
+    it('emits a completion event of CompletionItem[]', (done) => {
+      const completion = [{
+        label: 'log',
+      }, {
+        label: 'info',
+      }] as lsProtocol.CompletionItem[];
+
+      // 3. Fake a server response for the hover
+      mockSocket.send.onThirdCall().callsFake((str) => {
+        const message = JSON.parse(str);
+
+        const data = JSON.stringify({
+          jsonrpc: '2.0',
+          id: message.id,
+          result: completion,
+        });
+
+        mockSocket.dispatchEvent(new MessageEvent('message', { data }));
+      });
+
+      connection.connect(mockSocket);
+      mockSocket.dispatchEvent(new Event('open'));
+
+      connection.on('completion', (response) => {
+        expect(response).toEqual(completion);
         done();
       });
     });
