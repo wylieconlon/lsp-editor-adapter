@@ -39,7 +39,13 @@ export class MockConnection implements ILspConnection {
   public isReferencesSupported = sinon.stub();
   public close = sinon.stub();
 
-  constructor() {}
+  public completionCharacters: string[];
+  public signatureCharacters: string[];
+
+  constructor() {
+    this.completionCharacters = ['.', ','];
+    this.signatureCharacters = ['('];
+  }
 
   public on(type: string, listener: (arg: any) => void) {
     const listeners = this.listeners[type];
@@ -58,9 +64,9 @@ export class MockConnection implements ILspConnection {
   }
 
   public getLanguageCompletionCharacters() {
-    return ['.', ','];
+    return this.completionCharacters;
   }
   public getLanguageSignatureCharacters() {
-    return ['('];
+    return this.signatureCharacters;
   }
 }

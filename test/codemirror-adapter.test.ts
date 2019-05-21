@@ -203,6 +203,40 @@ describe('CodeMirror adapter', () => {
       expect(editor.getDoc().getAllMarks().length).toEqual(0);
       expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(0);
     });
+
+    it('should highlight but not show a tooltip for null array contents', () => {
+      const pos = { line: 0, ch: 3 };
+      const screenPos = editor.charCoords(pos, 'window');
+
+      const target = editor.getWrapperElement().querySelector('.CodeMirror-line');
+      target.dispatchEvent(new MouseEvent('mousemove', {
+        clientX: screenPos.left,
+        clientY: screenPos.top,
+        bubbles: true,
+      }));
+
+      clock.tick(10);
+
+      connection.dispatchEvent(new MessageEvent('hover', {
+        data: {
+          contents: [null],
+          range: {
+            start: {
+              line: 0,
+              character: 0,
+            },
+            end: {
+              line: 0,
+              character: 5,
+            },
+          },
+        },
+      }));
+
+      expect(editor.getDoc().getAllMarks().length).toEqual(1);
+
+      expect(document.querySelectorAll('.CodeMirror-lsp-tooltip').length).toEqual(0);
+    });
   });
 
   describe('token highlights', () => {
@@ -277,6 +311,12 @@ describe('CodeMirror adapter', () => {
       clock.tick(defaults.debounceSuggestionsWhileTyping);
 
       expect(connection.getCompletion.callCount).toEqual(1);
+    });
+
+    it('does not request autocompletion if there are no triggers', () => {
+      connection.completionCharacters = [];
+      clock.tick(defaults.debounceSuggestionsWhileTyping);
+      expect(connection.getCompletion.callCount).toEqual(0);
     });
 
     it('requests autocompletion suggestions when ending on the character', () => {
@@ -378,6 +418,12 @@ describe('CodeMirror adapter', () => {
     it('requests signature suggestions', () => {
       clock.tick(defaults.debounceSuggestionsWhileTyping);
       expect(connection.getSignatureHelp.callCount).toEqual(1);
+    });
+
+    it('does not request signature suggestions if there are no characters', () => {
+      connection.signatureCharacters = [];
+      clock.tick(defaults.debounceSuggestionsWhileTyping);
+      expect(connection.getSignatureHelp.callCount).toEqual(0);
     });
 
     it('displays signature suggestions', () => {
