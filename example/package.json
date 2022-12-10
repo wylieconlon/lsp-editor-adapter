@@ -18,7 +18,7 @@
     "@types/webpack": "^4.4.32",
     "concurrently": "^4.1.0",
     "css-loader": "^2.1.1",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "rimraf": "^2.6.3",
     "style-loader": "^0.23.1",
     "ts-loader": "^6.0.2",
