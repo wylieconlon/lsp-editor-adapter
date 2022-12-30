@@ -17,12 +17,12 @@
     "@types/express": "^4.17.0",
     "@types/webpack": "^4.4.32",
     "concurrently": "^4.1.0",
-    "css-loader": "^2.1.1",
+    "css-loader": "^6.7.3",
     "express": "^4.17.1",
     "rimraf": "^2.6.3",
-    "style-loader": "^0.23.1",
-    "ts-loader": "^6.0.2",
-    "webpack": "^4.33.0",
-    "webpack-cli": "^3.3.2"
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.4.2",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   }
 }
